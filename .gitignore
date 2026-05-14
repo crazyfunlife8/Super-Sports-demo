@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+*.code-workspace
+.claude/
+
+# Internal / AI context files
+view-llm.md
+view-llm-full.md
+AI-vibeCoding.md
+
+# Supabase local dev
+supabase/.temp/
+supabase/config.toml

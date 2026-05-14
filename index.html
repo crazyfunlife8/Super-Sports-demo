@@ -1,0 +1,1093 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <title>Super體育(demo)</title>
+    <link rel="stylesheet" href="css/site.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/custom.css">
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body
+    leftmargin="0"
+    topmargin="0"
+    marginwidth="0"
+    marginheight="0"
+    class="de"
+    style="position: relative"
+  >
+    <header class="header" id="mheader">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <img
+              src="//img.q1688.net/agent-img/8fbf44ab856c4e8c999ba3cd7937b91f.png"
+              alt=""
+            />
+          </a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNavDropdown"
+            aria-controls="navbarNavDropdown"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <i class="bi bi-list"></i>
+          </button>
+          <div
+            class="collapse navbar-collapse mobile-set"
+            id="navbarNavDropdown"
+          >
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a
+                  class="nav-link active"
+                  aria-current="page"
+                  href="javascript:void(0)"
+                  onclick="sitefn.callService()"
+                  >問題回應</a
+                >
+              </li>
+            </ul>
+            <div class="user-info" style="padding-right: 0 !important">
+              <div class="user-name">
+                您好,<span id="headerUsername">mx5144</span> <b class="text-primary">[<span id="headerRole">子帳號</span>]</b>
+                <span id="editModeIndicator" class="badge bg-warning text-dark ms-2" style="display:none">編輯模式中</span>
+              </div>
+              <div style="text-align: right; font-size: 10pt;">
+                剩餘額度：<span id="headerCredit">99,999</span>
+              </div>
+              <div style="text-align: right">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onclick="sitefn.ChangePwDialog()"
+                >
+                  重設密碼
+                </button>
+                <button type="button" class="btn btn-light btn-sm logout-btn">
+                  登出
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="bulletin">
+        <span class="fs-4" style="align-self: flex-end;"> 
+            <i class="bi bi-volume-up-fill"></i> 
+        </span>
+        <marquee direction="left" height="30" scrollamount="5" id="marq">
+          
+        </marquee>
+      </div>
+      <ul class="nav top-nav" id="menu">
+        <li class="nav-item">
+          <a
+            href="#"
+            class="lv1 nav-link"
+            id="manage"
+            data-target="manageLst"
+            >管理</a
+          >
+          <div class="sub-items lv2 d-none" id="manageLst">
+            <ul id="mLvInfo">
+              <li>
+                <a href="#" data-lv="info" class="active"
+                  >個人資料</a
+                >
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            class="lv1 nav-link"
+            href="#"
+            id="navbarDropdownMenuLink"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            即時注單
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_31"
+                data-target="list_ball"
+                >冠軍聯賽</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_1"
+                data-target="list_ball"
+                >足球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_3"
+                data-target="list_ball"
+                >美籃</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_16"
+                data-target="list_ball"
+                >其它籃球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=mlb"
+                id="ball_4"
+                data-target="list_ball"
+                >美棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=cpbl"
+                id="ball_11"
+                data-target="list_ball"
+                >台棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=npb"
+                id="ball_12"
+                data-target="list_ball"
+                >日棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_14"
+                data-target="list_ball"
+                >韓棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_13"
+                data-target="list_ball"
+                >其它棒球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_82"
+                data-target="list_ball"
+                >冰球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_5"
+                data-target="list_ball"
+                >美足</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_55"
+                data-target="list_ball"
+                >網球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_83"
+                data-target="list_ball"
+                >彩球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_84"
+                data-target="list_ball"
+                >指數</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_85"
+                data-target="list_ball"
+                >電競</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_22"
+                data-target="list_ball"
+                >羽毛球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_23"
+                data-target="list_ball"
+                >排球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_21"
+                data-target="list_ball"
+                >乒乓球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_72"
+                data-target="list_ball"
+                >賽狗賽馬</a
+              >
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a
+            href="history.html"
+            class="lv1 nav-link"
+            id="His"
+            data-target="list_His"
+            >歷史賽事</a
+          >
+          <div class="sub-items d-none lv2" id="list_His">
+            <ul id="list_His_Items">
+              <li><a href="#/His/Ball/31">冠軍聯賽</a></li>
+              <li><a href="#/His/Ball/1">足球</a></li>
+              <li><a href="#/His/Ball/3">美籃</a></li>
+              <li><a href="#/His/Ball/16">其它籃球</a></li>
+              <li><a href="#/His/Ball/4">美棒</a></li>
+              <li><a href="#/His/Ball/11">台棒</a></li>
+              <li><a href="#/His/Ball/12">日棒</a></li>
+              <li><a href="#/His/Ball/14">韓棒</a></li>
+              <li><a href="#/His/Ball/13">其它棒球</a></li>
+              <li><a href="#/His/Ball/82">冰球</a></li>
+              <li><a href="#/His/Ball/5">美足</a></li>
+              <li><a href="#/His/Ball/55">網球</a></li>
+              <li><a href="#/His/Ball/83">彩球</a></li>
+              <li><a href="#/His/Ball/84">指數</a></li>
+              <li><a href="#/His/Ball/85">電競</a></li>
+              <li><a href="#/His/Ball/22">羽毛球</a></li>
+              <li><a href="#/His/Ball/23">排球</a></li>
+              <li><a href="#/His/Ball/21">乒乓球</a></li>
+              <li><a href="#/His/Ball/72">賽狗賽馬</a></li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            href="#"
+            class="lv1 nav-link active"
+            id="rpt"
+            data-target="list_rpt"
+            >查詢報表</a
+          >
+          <div class="sub-items lv2" id="list_rpt">
+            <ul>
+              <li><a href="#" class="active">總帳 </a></li>
+              <li><a href="#" class="">RG真人</a></li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            href="#"
+            class="lv1 nav-link"
+            id="Online"
+            data-target="list_Direct"
+            >在線會員</a
+          >
+          <div class="sub-items d-none lv2" id="list_Online">
+            <ul>
+              <li><a href="#">在線會員</a></li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            href="#"
+            class="lv1 nav-link"
+            >Super彩</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            href="#"
+            class="lv1 nav-link"
+          >
+            說明書
+          </a>
+        </li>
+      </ul>
+      <div
+        id="divmemsave"
+        class="row"
+        style="
+          margin: 5px auto 5px auto;
+          justify-content: center;
+          padding-top: 40px;
+          width: 98%;
+          border-bottom: 2px #bb2d3b solid;
+          display: none;
+        "
+      >
+        <div class="col-auto p-0">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            onclick="SaveMem()"
+          >
+            儲存設定
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick="window.history.back()"
+          >
+            取消設定
+          </button>
+          <button
+            type="button"
+            class="btn btn-warning btn-sm"
+            id="btnchangeMPW"
+          >
+            重設密碼
+          </button>
+        </div>
+        <div class="col p-0" style="width: 200px">
+          <div
+            class="text-end"
+            id="divmemball"
+            style="white-space: nowrap"
+          ></div>
+        </div>
+      </div>
+    </header>
+    
+    <div style="padding-top: 20px" class="content-body">
+      <style>
+        .table > :not(:first-child) {
+          border-width: 1px !important;
+        }
+        .table td {
+          text-align: right;
+        }
+        .table {
+          text-align: right;
+        }
+        .main::after {
+          background-color: transparent;
+        }
+        .table th,
+        .table td {
+          padding: 5px !important;
+          font-size: 10pt;
+          white-space: nowrap;
+        }
+        .table-hover tbody tr:hover td,
+        .table-hover tbody tr:hover th {
+          background-color: #c9deff;
+        }
+        .table-hover tbody tr {
+          cursor: default;
+        }
+        .table thead {
+          background-color: #f3f2f7;
+          top: 175px;
+        }
+        .w99,
+        span.w3s1,
+        span.w5s1,
+        span.w6s1,
+        span.w7s1,
+        span.w8s1,
+        span.w9s1 {
+          display: none;
+        }
+        #ALL thead th.t99 { min-width: 108px; }
+        .table thead.All th {
+          background-color: #de4f1b !important;
+          color: #fff;
+        }
+        .table thead.All {
+          background-color: #c87082 !important;
+          color: #fff;
+        }
+        .table thead.All th[class^="w"] {
+          background-color: #ae4e5f !important;
+        }
+        .table thead th[class^="w"] {
+          background-color: #72b1bb;
+        }
+        .table thead th[class^="w"] span {
+          cursor: pointer;
+        }
+        .table thead {
+          background-color: #a3cbcb;
+        }
+        .main {
+          border: 0 !important;
+          width: 100% !important;
+        }
+        /* 欄位比例寬度：依參考網站實測值換算百分比，table 永遠填滿容器不溢出 */
+        #ALL { width: 100%; }
+        #ALL tbody td:nth-child(1)  { width: 12.8%; }
+        #ALL tbody td:nth-child(2)  { width:  4.6%; }
+        #ALL tbody td:nth-child(3)  { width:  8.7%; }
+        #ALL tbody td:nth-child(4)  { width:  8.7%; }
+        #ALL tbody td:nth-child(5)  { width:  8.8%; }
+        #ALL tbody td:nth-child(7)  { width:  7.2%; }
+        #ALL tbody td:nth-child(9)  { width:  8.5%; }
+        #ALL tbody td:nth-child(11) { width:  7.2%; }
+        #ALL tbody td:nth-child(13) { width:  7.2%; }
+        #ALL tbody td:nth-child(15) { width:  7.7%; }
+        #ALL tbody td:nth-child(17) { width:  6.4%; }
+        #ALL tbody td:nth-child(19) { width:  7.7%; }
+        #ALL tbody td:nth-child(20) { width:  4.3%; }
+        #ALL thead th.t99           { width:  5.9%; }
+      </style>
+      <div class="main">
+        <div class="row">
+          <div class="col-auto">
+            <div
+              class="d-flex justify-content-between justify-content-lg-start"
+            >
+              <div class="title-name">
+                <span class="text-primary"> 總帳 </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row d-flex justify-content-between pt-1">
+          <div class="col-12 col-lg-12 pb-2">
+            <div class="form-group row">
+              <div class="col-auto" style="width: 120px; padding-right: 0">
+                <select class="form-select form-select-sm" id="cmbTicketTime">
+                  <option value="acctime" selected="" lang="b33">
+                    帳務日期
+                  </option>
+                  <option value="bettime">投注時間</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <div class="input-group input-daterange">
+                  <div id="divsd">
+                    <input
+                      class="form-control form-control-sm date"
+                      style="width: 130px"
+                      data-target="divsd"
+                      id="txtStartDate"
+                      data-date="2026-05-06 00:00:00"
+                      value="2026-05-06"
+                    />
+                  </div>
+                  <div
+                    class="input-group-addon"
+                    style="width: 30px; text-align: center; margin-top: 5px"
+                  >
+                    to
+                  </div>
+                  <div id="divse">
+                    <input
+                      class="form-control form-control-sm date"
+                      style="width: 130px"
+                      data-target="divse"
+                      id="txtEndDate"
+                      data-date="2026-05-06 23:59:59"
+                      value="2026-05-06"
+                    />
+                  </div>
+                </div>
+              </div>
+              <div class="col-auto pl-0">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('DB', $('#cmbTicketTime').val())"
+                >
+                  前一日
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('N', $('#cmbTicketTime').val())"
+                >
+                  今日
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('DA', $('#cmbTicketTime').val())"
+                >
+                  後一日
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('W', $('#cmbTicketTime').val())"
+                >
+                  本週
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('LW', $('#cmbTicketTime').val())"
+                >
+                  上週
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('M', $('#cmbTicketTime').val())"
+                >
+                  本月
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  style="margin-right: 4px"
+                  onclick="billfn.getDateRange('LM', $('#cmbTicketTime').val())"
+                >
+                  上月
+                </button>
+              </div>
+              <label class="col-auto col-form-label">報表分類</label>
+              <div class="col-auto">
+                <select
+                  class="form-select form-select-sm"
+                  id="cmbRpt"
+                  style="margin-left: 0"
+                >
+                  <option value="All">總帳</option>
+                  <option value="Type">分類帳</option>
+                  <option value="Game">賽事帳</option>
+                  <option value="Alert">浮紅注單</option>
+                  <option value="Cancel">已註銷注單</option>
+                  <option value="Pending">未結算注單</option>
+                </select>
+              </div>
+              <label class="col-auto col-form-label">投注種類</label>
+              <div class="col-auto">
+                <select
+                  class="form-select form-select-sm"
+                  id="cmbwagerType"
+                  style="margin-left: 0"
+                >
+                  <option value="-1" selected="" lang="b33">全部</option>
+                  <option value="1" lang="c59">讓分</option>
+                  <option value="2" lang="c60">大小盤</option>
+                  <option value="3" lang="c62">獨贏(1X2)</option>
+                  <option value="4" lang="c61">單雙</option>
+                  <option value="5" lang="c63">一輸二贏</option>
+                  <option value="7" lang="c64">走地讓分</option>
+                  <option value="8" lang="c65">走地大小</option>
+                  <option value="11" lang="c62">走地獨贏(1X2)</option>
+                  <option value="10">波膽</option>
+                  <option id="oEnableParlay" value="9" lang="f26">過關</option>
+                  <option value="12" lang="c66">猜冠軍</option>
+                </select>
+              </div>
+            </div>
+            <div class="row" style="margin-top: 10px">
+              <label
+                class="col-auto col-form-label"
+                style="width: 120px; padding-right: 0; text-align: right"
+                >球種</label
+              >
+              <div class="col-auto">
+                <select
+                  class="form-select form-select-sm"
+                  id="cmbballType"
+                  style="flex: 0 0 60px; margin-left: 0; width: 120px"
+                >
+                  <option value="-1">全部</option>
+                  <option value="3">籃球</option>
+                  <option value="16">其它籃球</option>
+                  <option value="4">美棒</option>
+                  <option value="12">日棒</option>
+                  <option value="14">韓棒</option>
+                  <option value="11">台棒</option>
+                  <option value="13">其它棒球</option>
+                  <option value="1">足球</option>
+                  <option value="55">網球</option>
+                  <option value="82">冰球</option>
+                  <option value="5">美足</option>
+                  <option value="83">彩球</option>
+                  <option value="84">指數</option>
+                  <option value="72">賽馬賽狗</option>
+                  <option value="85">電競</option>
+                  <option value="22">羽毛球</option>
+                  <option value="23">排球</option>
+                  <option value="24">撞球</option>
+                  <option value="21">乒乓球</option>
+                  <option value="31">冠軍聯賽</option>
+                  <option value="98">超吉8</option>
+                </select>
+              </div>
+              <label class="col-auto col-form-label" style="padding-left: 85px"
+                >賽程時段</label
+              >
+              <div class="col-auto">
+                <select
+                  class="form-select form-select-sm"
+                  id="cmbacqType"
+                  style="width: 120px"
+                >
+                  <option value="-1">全部</option>
+                  <option value="0" lang="f30">全場(不含過關)</option>
+                  <option value="1" lang="c80">上半場</option>
+                  <option value="2" lang="b4">下半場</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select
+                  class="form-select form-select-sm"
+                  id="cmbnumType"
+                  style="width: 120px"
+                >
+                  <option value="2">小數後兩位</option>
+                  <option value="0" selected="">整數</option>
+                </select>
+              </div>
+              <label class="col-auto col-form-label">帳號</label>
+              <div class="col-auto">
+                <input
+                  class="form-control form-control-sm"
+                  style="width: 120px"
+                  id="txtqMemID"
+                />
+              </div>
+              <label class="col-auto col-form-label">單號</label>
+              <div class="col-auto">
+                <input
+                  class="form-control form-control-sm"
+                  style="width: 120px"
+                  id="txtqTicketID"
+                />
+              </div>
+              <div class="col">
+                <div>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    id="btnRptQuery"
+                    style="width: 100px"
+                  >
+                    <i class="bi bi-search"></i> 查詢
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <hr />
+        <div class="row content-body bill" id="billContent">
+          <div id="bllAll">
+            <h4 class="card-title">
+              總帳
+              <button
+                id="btnback"
+                class="btn btn-primary btn-sm"
+                onclick="billfn.hisBack()"
+              >
+                上一頁</button
+              ><button
+                id="btnRefresh"
+                class="btn btn-info btn-sm ms-1"
+                onclick="billfn.Refresh()"
+              >
+                刷新
+              </button>
+            </h4>
+
+            <table
+              striped=""
+              hover=""
+              responsive=""
+              class="table table-bordered table-hover table-striped"
+              style="word-break: break-all"
+              id="ALL"
+            >
+              <thead class="text-center ALL index-th">
+                <tr>
+                  <th colspan="45"><span name="BallName">全部</span></th>
+                </tr>
+                <tr>
+                  <th rowspan="2"><span name="MemTitle">網站</span></th>
+                  <th lang="f45" rowspan="2">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 1, this)"
+                      >筆數</span
+                    >
+                  </th>
+                  <th lang="f46" rowspan="2">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 2, this)"
+                      >下注金額</span
+                    >
+                  </th>
+                  <th lang="f47" rowspan="2">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 3, this)"
+                      >有效投注</span
+                    >
+                  </th>
+                  <th lang="f47" rowspan="2">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 4, this)"
+                      >未過帳金額</span
+                    >
+                  </th>
+                  <th lang="b56" rowspan="1" colspan="1">
+                    <label
+                      >會員
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="1"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th lang="b57" colspan="1" class="t3" data-v="3">
+                    <label
+                      >代理
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="3"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th lang="f50" colspan="1" class="t5" data-v="5">
+                    <label
+                      >總代
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="5"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th lang="f51" colspan="1" class="t6" data-v="6">
+                    <label
+                      >股東
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="6"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th lang="f52" colspan="1" class="t7" data-v="7">
+                    <label
+                      >大股東
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="7"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th lang="f40" colspan="1" class="t8" data-v="8">
+                    <label
+                      >總監
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="8"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th lang="f53" colspan="1" class="t9" data-v="9">
+                    <label
+                      >大總監
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        data-idx="9"
+                        value="0"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                  <th rowspan="2">備註</th>
+                  <th
+                    lang="b2"
+                    colspan="1"
+                    data-idx="99"
+                    rowspan="2"
+                    class="t99"
+                  >
+                    <label
+                      >成數
+                      <input
+                        class="form-check-input"
+                        type="checkbox"
+                        data-show="0"
+                        value="0"
+                        data-idx="99"
+                        onclick="billfn.showcol(this)"
+                    /></label>
+                  </th>
+                </tr>
+                <tr>
+                  <th class="w1" style="display: none">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 5, this)"
+                      >返水</span
+                    >
+                  </th>
+                  <th>
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 6, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th
+                    class="w3"
+                    data-v="3"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="3">▶</span
+                    ><span class="w3s0">上級返水</span
+                    ><span class="w3s1">未拆帳</span>
+                  </th>
+                  <th data-v="3">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 8, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th
+                    class="w5"
+                    data-v="5"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="5">▶</span>
+                    <span class="w5s0">上級返水</span
+                    ><span class="w5s1">未拆帳</span>
+                  </th>
+                  <th data-v="5">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 10, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th
+                    class="w6"
+                    data-v="6"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="6">▶</span>
+                    <span class="w6s0">上級返水</span
+                    ><span class="w6s1">未拆帳</span>
+                  </th>
+                  <th data-v="6">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 12, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th
+                    class="w7"
+                    data-v="7"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="7">▶</span>
+                    <span class="w7s0">上級返水</span
+                    ><span class="w7s1">未拆帳</span>
+                  </th>
+                  <th data-v="7">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 14, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th
+                    class="w8"
+                    data-v="8"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="8">▶</span>
+                    <span class="w8s0">上級返水</span
+                    ><span class="w8s1">未拆帳</span>
+                  </th>
+                  <th data-v="8">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 16, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th
+                    class="w9"
+                    data-v="9"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="9">▶</span>
+                    <span class="w9s0">上級返水</span
+                    ><span class="w9s1">未拆帳</span>
+                  </th>
+                  <th data-v="9">
+                    <span
+                      data-sort="0"
+                      onclick="billfn.sortTable('ALL', 18, this)"
+                      >結果</span
+                    >
+                  </th>
+                  <th class="w99" style="display: none">足球</th>
+                  <th class="w99" style="display: none">美籃</th>
+                  <th class="w99" style="display: none">美棒</th>
+                  <th class="w99" style="display: none">美足</th>
+                  <th class="w99" style="display: none">台棒</th>
+                  <th class="w99" style="display: none">日棒</th>
+                  <th class="w99" style="display: none">其它棒球</th>
+                  <th class="w99" style="display: none">韓棒</th>
+                  <th class="w99" style="display: none">其它籃球</th>
+                  <th class="w99" style="display: none">乒乓球</th>
+                  <th class="w99" style="display: none">羽毛球</th>
+                  <th class="w99" style="display: none">排球</th>
+                  <th class="w99" style="display: none">撞球</th>
+                  <th class="w99" style="display: none">冠軍聯賽</th>
+                  <th class="w99" style="display: none">網球</th>
+                  <th class="w99" style="display: none">賽馬賽狗</th>
+                  <th class="w99" style="display: none">冰球</th>
+                  <th class="w99" style="display: none">彩球</th>
+                  <th class="w99" style="display: none">指數</th>
+                  <th class="w99" style="display: none">電競</th>
+                  <th class="w99" style="display: none">超吉8</th>
+                  <th class="w99" style="display: none">綜合過關</th>
+                  <th class="w99" style="display: none">電子遊戲</th>
+                </tr>
+              </thead>
+              <tbody id="sitesBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer style="position: absolute; bottom: 0;"></footer>
+
+    <!-- 跑馬燈編輯 Modal（編輯模式使用） -->
+    <div class="modal fade" id="marqueeEditModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">編輯跑馬燈文字</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-text mb-2">每行一則訊息，儲存後自動拼接滾動。</div>
+            <textarea id="marqueeEditText" class="form-control" rows="6" placeholder="[系統資訊] 第一則訊息&#10;[注單資訊] 第二則訊息">
+              [賽事資訊 足球] 05月11日 08:30 奧斯丁II隊 (主) VS 塔科馬挑戰，因比分需進一步核實，故賽果予以待定，本公司確認賽果無誤後會立即派彩，敬請會員留意。
+[賽事資訊 足球] 05月11日 02:30 祖澤倫斯BA (主) VS 阿拉戈亞諾AL，因比分需進一步核實，故賽果予以待定，本公司確認賽果無誤後會立即派彩，敬請會員留意。
+[賽事資訊 足球] 05月10日 22:45 布雷達 (主) V.S 海倫維恩 該場賽事因賽事腰斬，上半為有效注單，全場所有注單取消，過關以(1)計算，敬請會員留意。
+[賽事資訊 籃球] 05月11日 01:00 基羅納(女) (主) VS 華倫西亞(女)，因比分需進一步核實，故賽果予以待定，本公司確認賽果無誤後會立即派彩，敬請會員留意。
+            </textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="editSvc.saveMarquee()">儲存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 載入順序：supabase → client → data → render → edit → date -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/data.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/edit.js"></script>
+    <script src="js/date.js"></script>
+  </body>
+</html>

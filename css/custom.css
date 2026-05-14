@@ -1,0 +1,143 @@
+* {
+    font-family: "Helvetica", "Arial","LiHei Pro","黑體-繁","微軟正黑體", sans-serif;
+    font-size: 10pt;
+}
+.member-info-set [class*="col"] {
+    margin-top: 10px;
+    border-bottom: 1px solid #cacaca;
+}
+.btn-primary {
+    color: #fff;
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.btn-primary:hover {
+    color: #fff;
+    background-color: #bb2d3b;
+    border-color: #b02a37
+}
+
+    .btn-primary:focus {
+        color: #fff;
+        background-color: #bb2d3b;
+        border-color: #bb2d3b;
+        box-shadow: 0 0 0 .25rem rgba(255,0,0,.5)
+    }
+.btn-outline-primary {
+    color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+    .btn-outline-primary:hover {
+        color: #fff !important;
+        background-color: #dc3545;
+        border-color: #dc3545
+    }
+.text-primary {
+
+    color: #dc3545 !important;
+}
+.sub-items {
+    font-family: "Helvetica", "Arial","LiHei Pro","黑體-繁","微軟正黑體", sans-serif;
+    background: linear-gradient(90deg, #dc3545 0%, #ae6168 100%) !important;
+    border-radius:5px;
+}
+.sub-items a {
+    color: #fff;
+    font-size: 10pt;
+}
+.sub-items a.active {
+    color: #000 !important;
+}
+.table .index-th th{
+    background-color: #dc4f1b;
+}
+.table thead th {
+    /* background-color: #dc4f1b; */
+    background-color: #dc3545;
+    color:#fff;
+}
+.dataTables_scrollHead {
+    background-color: #dc3545 !important;
+    border-radius: 3px 3px 0 0;
+}
+.info-table {
+    border-bottom: 2px solid #dc3545;
+}
+
+footer::after, nav::after {
+    background: linear-gradient(90deg, #dc3545 0%, rgb(255 185 200) 84%) !important;
+}
+a {
+    color: #6b717e;
+    text-decoration: underline;
+}
+
+.modal-header {
+    background-color: #dc3545 !important;
+    color:#fff;
+}
+.form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+
+.page-item.active .page-link {
+
+    background-color: #dc3545;
+    border-color: #dc3545;
+}
+.pre-tables thead th {
+    border-bottom: 1px #dc3545 solid !important;
+}
+.histb tbody:not(:first-child) {
+    border-top: 2px solid #dc3545 !important;
+}
+
+/* 導航選單 active 箭頭圖標 */
+ul.top-nav .nav-link {
+    position: relative;
+}
+ul.top-nav .nav-link.active::before {
+    content: "";
+    display: block;
+    height: 15px;
+    width: 15px;
+    position: absolute;
+    background: url(../images/arrow.svg) no-repeat center / contain;
+    left: 0px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-radius: 0px
+}
+
+/* 固定頁面最小寬度：視窗縮小時顯示橫向捲軸，不做 RWD 收縮（與參考站一致） */
+body {
+    min-width: 1170px;
+    overflow-x: auto;
+}
+
+/* 篩選列第一排：禁止換行 + 縮小 gutter 避免 7 個欄位總寬超過 1170px */
+.form-group.row {
+    align-items: center;
+    --bs-gutter-x: 0.25rem;
+}
+
+/* ── 編輯模式 ── */
+/* 可編輯欄位 hover 提示 */
+.is-edit [data-edit-field]:hover,
+.is-edit #headerUsername:hover,
+.is-edit #headerRole:hover,
+.is-edit #headerCredit:hover,
+.is-edit #marq:hover {
+    background-color: rgba(255, 235, 59, 0.25);
+    cursor: pointer;
+}
+/* 跑馬燈在編輯模式下固定顯示 pointer */
+.is-edit #marq {
+    cursor: pointer;
+}
+/* 編輯中輸入框 */
+.is-edit [data-edit-field] input.form-control {
+    padding: 1px 4px;
+    height: auto;
+}

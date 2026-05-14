@@ -1,0 +1,540 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+    <title>Super體育(demo)</title>
+    <link rel="stylesheet" href="css/site.css" />
+    <link rel="stylesheet" href="css/main.css" />
+    <link rel="stylesheet" href="css/custom.css" />
+    <!-- CDN fallbacks for local dev (server paths /lib/* /js/* unavailable) -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+  </head>
+  <body
+    leftmargin="0"
+    topmargin="0"
+    marginwidth="0"
+    marginheight="0"
+    class="de"
+    style="position: relative"
+  >
+    <header class="header" id="mheader">
+      <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container-fluid">
+          <a class="navbar-brand" href="#">
+            <img
+              src="//img.q1688.net/agent-img/8fbf44ab856c4e8c999ba3cd7937b91f.png"
+              alt=""
+            />
+          </a>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarNavDropdown"
+            aria-controls="navbarNavDropdown"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            <i class="bi bi-list"></i>
+          </button>
+          <div
+            class="collapse navbar-collapse mobile-set"
+            id="navbarNavDropdown"
+          >
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+              <li class="nav-item">
+                <a
+                  class="nav-link active"
+                  aria-current="page"
+                  href="javascript:void(0)"
+                  onclick="sitefn.callService()"
+                  >問題回應</a
+                >
+              </li>
+            </ul>
+            <div class="user-info" style="padding-right: 0 !important">
+              <div class="user-name">
+                您好,<span id="headerUsername">mx5144</span>
+                <b class="text-primary"
+                  >[<span id="headerRole">子帳號</span>]</b
+                >
+                <span
+                  id="editModeIndicator"
+                  class="badge bg-warning text-dark ms-2"
+                  style="display: none"
+                  >編輯模式中</span
+                >
+              </div>
+              <div style="text-align: right; font-size: 10pt">
+                剩餘額度：<span id="headerCredit">99,999</span>
+              </div>
+              <div style="text-align: right">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  onclick="sitefn.ChangePwDialog()"
+                >
+                  重設密碼
+                </button>
+                <button type="button" class="btn btn-light btn-sm logout-btn">
+                  登出
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
+      <div class="bulletin">
+        <span class="fs-4" style="align-self: flex-end">
+          <i class="bi bi-volume-up-fill"></i>
+        </span>
+        <marquee
+          direction="left"
+          height="30"
+          scrollamount="5"
+          id="marq"
+        >
+          ★敬請注意★為保障各階帳戶安全，請各階妥善保管自身帳號密碼，勿將帳號、密碼等資料交付給他人，或使用過於簡單且固定之密碼，並定期變更登入密碼，長期無使用帳號請自行禁登，以確保自身的權益。。　　　　　　　　　　　　　　　　　　　　★敬請注意★登入後請各階檢視各項佔成與設定是否有誤，若有不符再請自行修改，造成不便敬請見諒。
+        </marquee>
+      </div>
+      <ul class="nav top-nav" id="menu">
+        <li class="nav-item">
+          <a href="#" class="lv1 nav-link" id="manage" data-target="manageLst"
+            >管理</a
+          >
+          <div class="sub-items lv2 d-none" id="manageLst">
+            <ul id="mLvInfo">
+              <li>
+                <a href="#" data-lv="info" class="active">個人資料</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            class="lv1 nav-link active"
+            href="#"
+            id="navbarDropdownMenuLink" role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+          >
+            即時注單
+          </a>
+          <ul class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_31"
+                data-target="list_ball"
+                >冠軍聯賽</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_1"
+                data-target="list_ball"
+                >足球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_3"
+                data-target="list_ball"
+                >美籃</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_16"
+                data-target="list_ball"
+                >其它籃球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=mlb"
+                id="ball_4"
+                data-target="list_ball"
+                >美棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=cpbl"
+                id="ball_11"
+                data-target="list_ball"
+                >台棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=npb"
+                id="ball_12"
+                data-target="list_ball"
+                >日棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_14"
+                data-target="list_ball"
+                >韓棒</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_13"
+                data-target="list_ball"
+                >其它棒球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_82"
+                data-target="list_ball"
+                >冰球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_5"
+                data-target="list_ball"
+                >美足</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_55"
+                data-target="list_ball"
+                >網球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_83"
+                data-target="list_ball"
+                >彩球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_84"
+                data-target="list_ball"
+                >指數</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_85"
+                data-target="list_ball"
+                >電競</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_22"
+                data-target="list_ball"
+                >羽毛球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_23"
+                data-target="list_ball"
+                >排球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_21"
+                data-target="list_ball"
+                >乒乓球</a
+              >
+            </li>
+            <li>
+              <a
+                class="dropdown-item active"
+                href="live-bets.html?sport=other"
+                id="ball_72"
+                data-target="list_ball"
+                >賽狗賽馬</a
+              >
+            </li>
+          </ul>
+        </li>
+        <li class="nav-item">
+          <a
+            href="history.html"
+            class="lv1 nav-link"
+            id="His"
+            data-target="list_His"
+            >歷史賽事</a
+          >
+          <div class="sub-items d-none lv2" id="list_His">
+            <ul id="list_His_Items">
+              <li><a href="#/His/Ball/31">冠軍聯賽</a></li>
+              <li><a href="#/His/Ball/1">足球</a></li>
+              <li><a href="#/His/Ball/3">美籃</a></li>
+              <li><a href="#/His/Ball/16">其它籃球</a></li>
+              <li><a href="#/His/Ball/4">美棒</a></li>
+              <li><a href="#/His/Ball/11">台棒</a></li>
+              <li><a href="#/His/Ball/12">日棒</a></li>
+              <li><a href="#/His/Ball/14">韓棒</a></li>
+              <li><a href="#/His/Ball/13">其它棒球</a></li>
+              <li><a href="#/His/Ball/82">冰球</a></li>
+              <li><a href="#/His/Ball/5">美足</a></li>
+              <li><a href="#/His/Ball/55">網球</a></li>
+              <li><a href="#/His/Ball/83">彩球</a></li>
+              <li><a href="#/His/Ball/84">指數</a></li>
+              <li><a href="#/His/Ball/85">電競</a></li>
+              <li><a href="#/His/Ball/22">羽毛球</a></li>
+              <li><a href="#/His/Ball/23">排球</a></li>
+              <li><a href="#/His/Ball/21">乒乓球</a></li>
+              <li><a href="#/His/Ball/72">賽狗賽馬</a></li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            href="index.html" class="lv1 nav-link" id="rpt"
+            data-target="list_rpt"
+            >查詢報表</a
+          >
+          <div class="sub-items lv2" id="list_ball">
+            <ul>
+              <li>
+                <a href="#" id="b0" class="">早餐</a>
+              </li>
+              <li>
+                <a href="#/Ball/BallComm/4/1" id="b1" class="active">單式</a>
+              </li>
+              <li>
+                <a href="#" id="b2" class="">走地</a>
+              </li>
+              <li>
+                <a href="#" id="bs3" class="">3局</a>
+              </li>
+              <li>
+                <a href="#" id="bs7" class="">7局</a>
+              </li>
+              <li>
+                <a href="#" id="b3" class="">已開賽</a>
+              </li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            href="#/Online"
+            class="lv1 nav-link"
+            id="Online"
+            data-target="list_Direct"
+            >在線會員</a
+          >
+          <div class="sub-items d-none lv2" id="list_Online">
+            <ul>
+              <li><a href="#/Online">在線會員</a></li>
+            </ul>
+          </div>
+        </li>
+        <li class="nav-item">
+          <a
+            href="#"
+            class="lv1 nav-link"
+            >Super彩</a
+          >
+        </li>
+        <li class="nav-item">
+          <a
+            href="javascript:void(0)"
+            class="lv1 nav-link"
+            onclick="window.open(`/Home/Markdown?doc=Credit`, '_blank')"
+          >
+            說明書
+          </a>
+        </li>
+      </ul>
+      <div
+        id="divmemsave"
+        class="row"
+        style="
+          margin: 5px auto 5px auto;
+          justify-content: center;
+          padding-top: 40px;
+          width: 98%;
+          border-bottom: 2px #bb2d3b solid;
+          display: none;
+        "
+      >
+        <div class="col-auto p-0">
+          <button
+            type="button"
+            class="btn btn-primary btn-sm"
+            onclick="SaveMem()"
+          >
+            儲存設定
+          </button>
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            onclick="window.history.back()"
+          >
+            取消設定
+          </button>
+          <button
+            type="button"
+            class="btn btn-warning btn-sm"
+            id="btnchangeMPW"
+          >
+            重設密碼
+          </button>
+        </div>
+        <div class="col p-0" style="width: 200px">
+          <div
+            class="text-end"
+            id="divmemball"
+            style="white-space: nowrap"
+          ></div>
+        </div>
+      </div>
+    </header>
+
+    <div style="padding-top: 20px" class="content-body">
+      <div class="main" id="app">
+        <div class="row d-flex justify-content-between">
+          <div class="col-lg-3 col-12">
+            <div class="d-flex justify-content-between justify-content-lg-start">
+              <div class="title-name">
+                <span class="text-primary" id="ballName">美棒</span>
+                <span class="arrow"></span>
+                <span id="ballType">單式</span>
+              </div>
+              <div>
+                <div class="update-btn">
+                  <span id="countdownDisplay">11</span>秒注單更新
+                  <button type="button" class="btn btn-light" id="btnImmediateRefresh">立即更新</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-9 pb-2">
+            <div class="row justify-content-end">
+              <div class="col-auto">
+                <select class="form-select form-select-sm" style="width:100px">
+                  <option value="0">全場</option>
+                  <option value="1">上半場</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select class="form-select form-select-sm" style="width:100px">
+                  <option value="0">第 1 頁</option>
+                </select>
+              </div>
+              <div class="col-auto pt-1"><label>注單種類</label></div>
+              <div class="col-2">
+                <select class="form-select form-select-sm">
+                  <option value="1">佔成</option>
+                  <option value="0">實際下注</option>
+                </select>
+              </div>
+              <div class="col-auto">
+                <select class="form-select form-select-sm" style="width:100px">
+                  <option value="0">不更新</option>
+                  <option value="15">15秒</option>
+                  <option value="30">30秒</option>
+                </select>
+              </div>
+              <div class="col-auto pt-1"><label>排序</label></div>
+              <div class="col-auto">
+                <select class="form-select form-select-sm" style="width:100px">
+                  <option value="0">聯盟</option>
+                  <option value="1">時間</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="pre-tables ball">
+          <h2 class="accordion-header" id="lh_7871">
+            <button id="liveBetsLeagueTitle" class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#lid_7871" aria-expanded="true" aria-controls="lid_7871"></button>
+          </h2>
+          <div class="accordion" id="liveBetsContainer">
+            <!-- 即時注單內容由 live-bets-render.js 動態渲染 -->
+          </div>
+        </div>
+      </div>
+    </div>
+    <footer></footer>
+
+    <!-- 跑馬燈編輯 Modal（編輯模式使用） -->
+    <div class="modal fade" id="marqueeEditModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">編輯跑馬燈文字</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="form-text mb-2">每行一則訊息，儲存後自動拼接滾動。</div>
+            <textarea id="marqueeEditText" class="form-control" rows="6" placeholder="[系統資訊] 第一則訊息&#10;[注單資訊] 第二則訊息"></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary" onclick="editSvc.saveMarquee()">儲存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 載入順序：supabase → client → data → render → edit -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="js/supabase-client.js"></script>
+    <script src="js/live-bets-data.js"></script>
+    <script src="js/live-bets-render.js"></script>
+    <script src="js/edit.js"></script>
+  </body>
+</html>
