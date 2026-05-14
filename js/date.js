@@ -53,5 +53,15 @@ billfn.getDateRange = function (type, _ticketTimeType) {
 
   $('#txtStartDate').val(fmt(start));
   $('#txtEndDate').val(fmt(end));
-  /* TODO Supabase: 存回 display_date_from / display_date_to（全部列或指定列） */
+  billfn.Refresh();
 };
+
+$(function () {
+  var today = new Date().toISOString().slice(0, 10);
+  $('#txtStartDate').val(today);
+  $('#txtEndDate').val(today);
+
+  $('#btnRptQuery').on('click', function () {
+    billfn.Refresh();
+  });
+});

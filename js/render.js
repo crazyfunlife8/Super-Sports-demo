@@ -82,6 +82,12 @@ function buildDataRow(site, isEditMode) {
     <td${ea('pending_amount')}>${fmtNum(site.pending_amount)}</td>
     ${buildLevelCells(site, isEditMode)}
     <td${ea('remark')}>${site.remark || ''}</td>
+    <td class="date-edit-col"><input type="date" class="site-date-input form-control form-control-sm p-1"
+      data-site-id="${site.id}" data-field="display_date_from"
+      value="${site.display_date_from || ''}"></td>
+    <td class="date-edit-col"><input type="date" class="site-date-input form-control form-control-sm p-1"
+      data-site-id="${site.id}" data-field="display_date_to"
+      value="${site.display_date_to || ''}"></td>
     ${w99Cells}
   </tr>`;
 }
@@ -104,6 +110,8 @@ function buildTotalRow(sites) {
     <td>${fmtNum(totals.pending_amount)}</td>
     ${buildLevelCells(totals, false)}
     <td></td>
+    <td class="date-edit-col"></td>
+    <td class="date-edit-col"></td>
     ${w99Cells}
   </tr>`;
 }
@@ -127,12 +135,39 @@ function renderTable(sites) {
   $('#sitesBody').html(html);
 }
 
+/* ── 日期欄 change handler（總是綁定，欄位本身由 CSS 控制顯示） ── */
+
+function bindSiteDateHandlers() {
+  $('#sitesBody').off('change.date', '.site-date-input')
+    .on('change.date', '.site-date-input', function () {
+      var siteId = $(this).data('site-id');
+      var field  = $(this).data('field');
+      var value  = $(this).val();
+      dataSvc.saveSite(siteId, field, value);
+    });
+}
+
 /* ── billfn 公開介面 ── */
 
 billfn.Refresh = function () {
   dataSvc.loadSites().then(function (sites) {
-    renderTable(sites);
-    if ((typeof editSvc !== 'undefined') && editSvc.isEditMode()) {
+    var isEdit = (typeof editSvc !== 'undefined') && editSvc.isEditMode();
+    var from = $('#txtStartDate').val();
+    var to   = $('#txtEndDate').val();
+
+    /* 編輯模式顯示全部；一般模式才套用日期篩選 */
+    var filtered = (!isEdit && (from || to)) ? sites.filter(function (s) {
+      var sf = s.display_date_from || '';
+      var st = s.display_date_to   || '';
+      if (!sf && !st) return true;
+      if (from && st && st < from) return false;
+      if (to   && sf && sf > to)   return false;
+      return true;
+    }) : sites;
+
+    renderTable(filtered);
+    bindSiteDateHandlers();
+    if (isEdit) {
       editSvc.bindHandlers();
     }
   });
