@@ -53,7 +53,6 @@ billfn.getDateRange = function (type, _ticketTimeType) {
 
   $('#txtStartDate').val(fmt(start));
   $('#txtEndDate').val(fmt(end));
-  billfn.Refresh();
 };
 
 $(function () {
