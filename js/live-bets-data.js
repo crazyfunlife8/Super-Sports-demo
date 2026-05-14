@@ -91,11 +91,13 @@ function _liveTicketsToNested(rows) {
   (rows || []).forEach(function (r) {
     if (!result[r.match_id]) {
       result[r.match_id] = {
-        handicap:     { home:{count:0,amount:0}, away: {count:0,amount:0} },
-        totals:       { over:{count:0,amount:0}, under:{count:0,amount:0} },
-        moneyline:    { home:{count:0,amount:0}, away: {count:0,amount:0} },
-        odd_even:     { odd: {count:0,amount:0}, even: {count:0,amount:0} },
-        first_inning: { home:{count:0,amount:0}, away: {count:0,amount:0} }
+        handicap:       { home:{count:0,amount:0}, away: {count:0,amount:0} },
+        totals:         { over:{count:0,amount:0}, under:{count:0,amount:0} },
+        moneyline:      { home:{count:0,amount:0}, away: {count:0,amount:0} },
+        odd_even:       { odd: {count:0,amount:0}, even: {count:0,amount:0} },
+        first_inning:   { home:{count:0,amount:0}, away: {count:0,amount:0} },
+        half_totals:    { over:{count:0,amount:0}, under:{count:0,amount:0} },
+        half_moneyline: { home:{count:0,amount:0}, away: {count:0,amount:0} }
       };
     }
     var bt = r.bet_type, bp = r.bet_position;
