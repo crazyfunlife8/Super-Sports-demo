@@ -57,8 +57,9 @@ billfn.getDateRange = function (type, _ticketTimeType) {
 
 $(function () {
   var today = new Date().toISOString().slice(0, 10);
-  $('#txtStartDate').val(today);
-  $('#txtEndDate').val(today);
+
+  flatpickr('#txtStartDate', { dateFormat: 'Y-m-d', defaultDate: today, allowInput: true });
+  flatpickr('#txtEndDate',   { dateFormat: 'Y-m-d', defaultDate: today, allowInput: true });
 
   $('#btnRptQuery').on('click', function () {
     billfn.Refresh();
