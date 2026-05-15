@@ -15,6 +15,8 @@
     <link rel="stylesheet" href="css/custom.css">
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
   </head>
   <body
     leftmargin="0"
@@ -501,6 +503,8 @@
         /* 日期欄：僅編輯模式顯示 */
         .date-edit-col              { display: none; }
         .is-edit .date-edit-col     { display: table-cell !important; }
+        /* flatpickr 日曆圖標隱藏 */
+        #txtStartDate, #txtEndDate { cursor: pointer; }
       </style>
       <div class="main">
         <div class="row">
@@ -529,11 +533,10 @@
                 <div class="input-group input-daterange">
                   <div id="divsd">
                     <input
-                      type="date"
+                      type="text"
                       class="form-control form-control-sm"
-                      style="width: 145px"
+                      style="width: 145px; text-align: center;"
                       id="txtStartDate"
-                      value="2026-05-06"
                     />
                   </div>
                   <div
@@ -544,11 +547,10 @@
                   </div>
                   <div id="divse">
                     <input
-                      type="date"
+                      type="text"
                       class="form-control form-control-sm"
-                      style="width: 145px"
-                      id="txtEndDate"
-                      value="2026-05-06"
+                      style="width: 145px; text-align: center;"
+                      id="txtEndDate"                      
                     />
                   </div>
                 </div>
