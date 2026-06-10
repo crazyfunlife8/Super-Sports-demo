@@ -236,9 +236,12 @@ function startLiveCountdown() {
   clearInterval(_liveTimer);
   _liveTimer = setInterval(function () {
     _liveCountdown--;
-    $('#countdownDisplay').text(_liveCountdown);
     if (_liveCountdown <= 0) {
+      clearInterval(_liveTimer);
+      $('#countdownDisplay').text('0');
       billfnLive.Refresh();
+    } else {
+      $('#countdownDisplay').text(_liveCountdown);
     }
   }, 1000);
 }
