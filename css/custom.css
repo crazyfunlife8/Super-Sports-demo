@@ -64,6 +64,12 @@
     border-bottom: 2px solid #dc3545;
 }
 
+footer {
+    position: fixed;
+    bottom: 6px;
+    left: 0;
+    z-index: 10;
+}
 footer::after, nav::after {
     background: linear-gradient(90deg, #dc3545 0%, rgb(255 185 200) 84%) !important;
 }
