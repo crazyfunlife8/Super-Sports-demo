@@ -146,7 +146,7 @@ function renderLiveBets(matches, tickets) {
 
   if (sportMatches.length === 0) {
     $('#liveBetsContainer').html(
-      '<div class="p-4 text-center text-muted">暫無賽事</div>'
+      '<div class="text-muted">暫無賽事</div>'
     );
     return;
   }

@@ -208,7 +208,7 @@ function renderHistory(matches, tickets) {
   var sportMatches = matches.filter(function (m) { return m.sport === _histCurrentSport; });
 
   if (sportMatches.length === 0) {
-    $('#historyContainer').html('<div class="p-4">暫無賽事</div>');
+    $('#historyContainer').html('<div class="p-2">暫無賽事</div>');
     return;
   }
 
@@ -388,7 +388,7 @@ $(function () {
       history.replaceState(null, '', window.location.pathname + '?' + qs.toString());
       $('#ballName').text($(this).text().trim());
       $('#list_His_Items a[data-sport]').removeClass('active');
-      $('#historyContainer').html('<div class="p-4">暫無賽事</div>');
+      $('#historyContainer').html('<div class="p-2">暫無賽事</div>');
     } else {
       var PARAM_TO_KEY = { mlb: 'baseball_mlb', cpbl: 'baseball_cpbl', npb: 'baseball_npb' };
       billfnHistory.switchSport(PARAM_TO_KEY[sport]);
@@ -402,7 +402,7 @@ $(function () {
 
   /* 初始載入 */
   if (_histCurrentSport === '__other__') {
-    $('#historyContainer').html('<div class="p-4">暫無賽事</div>');
+    $('#historyContainer').html('<div class="p-2">暫無賽事</div>');
   } else {
     billfnHistory.Refresh();
   }

@@ -216,13 +216,11 @@ td[status="-1"] {
     padding-bottom:10px;
 }
 footer::after {
-    content: " ";
-    /* display: block; */
+    content:" ";
     height: 6px;
     width: 150px;
     position:absolute;
     z-index: 5;
-    background: linear-gradient(90deg, rgb(95, 180, 163) 0%, rgb(37, 237, 182) 84%);
     bottom: -2px;
     left: -3px;
     transform: skewX(-40deg);
