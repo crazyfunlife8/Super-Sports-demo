@@ -68,10 +68,10 @@ window.editSvc = {
   },
 
   initGlobalActions() {
-    $('body').append(`
+    $('footer').after(`
       <div id="globalActionPanel" style="
-        margin:1rem; right:0; position:absolute;
-        display:flex;flex-direction:column;gap:6px;width:160px;">
+        display:flex;flex-direction:column;gap:6px;width:160px;
+        margin-left:auto;padding:1rem 1rem 1.5rem;">
         <button id="btnExitEdit"     class="btn btn-sm btn-dark"><i class="bi bi-box-arrow-right me-1"></i>退出編輯模式</button>
         <hr class="my-1" style="border-color:#aaa">
         <button id="btnExportJson"   class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>匯出 JSON</button>
