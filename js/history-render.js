@@ -343,12 +343,32 @@ var editSvcHistory = {
   }
 };
 
+/* ── 日期篩選 ── */
+
+var _histFilterActive = false;
+
+function _histGetMatchDate(m) {
+  var t = m.commence_time || '';
+  if (t.includes('T')) return t.slice(0, 10);
+  var dayPart = t.split(' ')[0];
+  return new Date().getFullYear() + '-' + dayPart;
+}
+
 /* ── 公開介面 ── */
 
 billfnHistory.Refresh = function () {
   Promise.all([dataSvcHistory.loadMatches(), dataSvcHistory.loadTickets()])
     .then(function (results) {
-      renderHistory(results[0], results[1]);
+      var matches = results[0];
+      if (_histFilterActive) {
+        var dateVal = $('#histDate').val();
+        if (dateVal) {
+          matches = matches.filter(function (m) {
+            return _histGetMatchDate(m) === dateVal;
+          });
+        }
+      }
+      renderHistory(matches, results[1]);
     });
 };
 
@@ -360,12 +380,12 @@ $(function () {
     _histCurrentSport = PARAM_TO_SPORT[sportParam];
   }
 
-  /* 帳務日期預設今日 */
+  /* 帳務日期：flatpickr 初始化，預設今日 */
   var today = new Date();
-  var yyyy  = today.getFullYear();
-  var mm    = String(today.getMonth() + 1).padStart(2, '0');
-  var dd    = String(today.getDate()).padStart(2, '0');
-  $('#histDate').val(yyyy + '-' + mm + '-' + dd);
+  var todayStr = today.getFullYear() + '-'
+    + String(today.getMonth() + 1).padStart(2, '0') + '-'
+    + String(today.getDate()).padStart(2, '0');
+  flatpickr('#histDate', { dateFormat: 'Y-m-d', defaultDate: todayStr, allowInput: true });
 
   /* 設定 ballName */
   $('#ballName').text(_histCurrentSport === '__other__' ? '其他賽事' : (HIST_SPORT_DISPLAY[_histCurrentSport] || '美棒'));
@@ -395,8 +415,9 @@ $(function () {
     }
   });
 
-  /* 重新整理按鈕 */
+  /* 重新整理按鈕：啟動日期篩選 */
   $('#btnHistRefresh').on('click', function () {
+    _histFilterActive = true;
     billfnHistory.Refresh();
   });
 

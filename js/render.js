@@ -149,21 +149,28 @@ function bindSiteDateHandlers() {
 
 /* ── billfn 公開介面 ── */
 
+var _filterActive = false;
+
 billfn.Refresh = function () {
   dataSvc.loadSites().then(function (sites) {
     var isEdit = (typeof editSvc !== 'undefined') && editSvc.isEditMode();
-    var from = $('#txtStartDate').val();
-    var to   = $('#txtEndDate').val();
+    var filtered = sites;
 
-    /* 編輯模式顯示全部；一般模式才套用日期篩選 */
-    var filtered = (!isEdit && (from || to)) ? sites.filter(function (s) {
-      var sf = s.display_date_from || '';
-      var st = s.display_date_to   || '';
-      if (!sf && !st) return true;
-      if (from && st && st < from) return false;
-      if (to   && sf && sf > to)   return false;
-      return true;
-    }) : sites;
+    /* 只有使用者主動按下查詢後才套用日期篩選；編輯模式永遠顯示全部 */
+    if (!isEdit && _filterActive) {
+      var from = $('#txtStartDate').val();
+      var to   = $('#txtEndDate').val();
+      if (from || to) {
+        filtered = sites.filter(function (s) {
+          var sf = s.display_date_from || '';
+          var st = s.display_date_to   || '';
+          if (!sf && !st) return true;
+          if (from && st && st < from) return false;
+          if (to   && sf && sf > to)   return false;
+          return true;
+        });
+      }
+    }
 
     renderTable(filtered);
     bindSiteDateHandlers();

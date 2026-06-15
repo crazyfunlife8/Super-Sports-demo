@@ -62,6 +62,7 @@ $(function () {
   flatpickr('#txtEndDate',   { dateFormat: 'Y-m-d', defaultDate: today, allowInput: true });
 
   $('#btnRptQuery').on('click', function () {
+    _filterActive = true;
     billfn.Refresh();
   });
 });
