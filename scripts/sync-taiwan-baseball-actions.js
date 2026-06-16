@@ -14,6 +14,7 @@ async function sbGet(targetUrl) {
   url.searchParams.set('api_key',         process.env.SCRAPINGBEE_API_KEY);
   url.searchParams.set('url',             targetUrl);
   url.searchParams.set('render_js',       'false');
+  url.searchParams.set('premium_proxy',   'true');
   url.searchParams.set('block_resources', 'false');
 
   const res = await fetch(url.toString());
