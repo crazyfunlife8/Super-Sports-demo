@@ -62,7 +62,23 @@ $(function () {
   flatpickr('#txtEndDate',   { dateFormat: 'Y-m-d', defaultDate: today, allowInput: true });
 
   $('#btnRptQuery').on('click', function () {
-    _filterActive = true;
-    billfn.Refresh();
+    if ($('#cmbRpt').val() === 'Game') {
+      if (typeof betRecordsFn !== 'undefined') betRecordsFn.activateFilter();
+    } else {
+      _filterActive = true;
+      billfn.Refresh();
+    }
+  });
+
+  $('#cmbRpt').on('change', function () {
+    var val = $(this).val();
+    if (val === 'Game') {
+      $('#bllAll').hide();
+      $('#betRecordsContainer').show();
+      if (typeof betRecordsFn !== 'undefined') betRecordsFn.Refresh();
+    } else {
+      $('#betRecordsContainer').hide();
+      $('#bllAll').show();
+    }
   });
 });

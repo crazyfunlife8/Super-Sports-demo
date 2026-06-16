@@ -483,6 +483,7 @@
         .main {
           border: 0 !important;
           width: 100% !important;
+          padding: 0 20px;
         }
         /* 欄位比例寬度：依參考網站實測值換算百分比，table 永遠填滿容器不溢出 */
         #ALL { width: 100%; }
@@ -507,7 +508,7 @@
         #txtStartDate, #txtEndDate { cursor: pointer; }
       </style>
       <div class="main">
-        <div class="row">
+        <div class="row" style="padding: 0 24px;">
           <div class="col-auto">
             <div
               class="d-flex justify-content-between justify-content-lg-start"
@@ -518,7 +519,7 @@
             </div>
           </div>
         </div>
-        <div class="row d-flex justify-content-between pt-1">
+        <div class="row d-flex justify-content-between pt-1" style="padding: 0 24px;">
           <div class="col-12 col-lg-12 pb-2">
             <div class="form-group row">
               <div class="col-auto" style="width: 120px; padding-right: 0">
@@ -613,8 +614,8 @@
                   上月
                 </button>
               </div>
-              <label class="col-auto col-form-label">報表分類</label>
-              <div class="col-auto">
+              <label class="col-auto col-form-label" style="padding: 0 10px;">報表分類</label>
+              <div class="col-auto" style="padding: 0 10px;">
                 <select
                   class="form-select form-select-sm"
                   id="cmbRpt"
@@ -628,8 +629,8 @@
                   <option value="Pending">未結算注單</option>
                 </select>
               </div>
-              <label class="col-auto col-form-label">投注種類</label>
-              <div class="col-auto">
+              <label class="col-auto col-form-label" style="padding: 0 10px;">投注種類</label>
+              <div class="col-auto" style="padding: 0 10px;">
                 <select
                   class="form-select form-select-sm"
                   id="cmbwagerType"
@@ -744,7 +745,7 @@
         </div>
         <hr />
         <div class="row content-body bill" id="billContent">
-          <div id="bllAll">
+          <div id="bllAll" style="padding: 0 24px;">
             <h4 class="card-title">
               總帳
               <button
@@ -1056,6 +1057,278 @@
               </tbody>
             </table>
           </div>
+          <div id="betRecordsContainer" style="display:none">
+            <h4 class="card-title">賽事帳</h4>
+            <table
+              id="TBBetRecords"
+              class="table table-bordered table-hover table-striped ALL"
+              style="width: 100%"
+            >
+              <thead class="text-center">
+                <tr>
+                  <th lang="f45" rowspan="2">時間</th>
+                  <th lang="f45" rowspan="2">單號</th>
+                  <th lang="f45" rowspan="2">交易內容</th>
+                  <th lang="f46" rowspan="2">下注金額</th>
+                  <th lang="f47" rowspan="2">有效投注</th>
+                  <th lang="b56" rowspan="1" colspan="1">
+                    會員
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="1"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="b57" colspan="1" class="t3" data-v="3">
+                    代理
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="3"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="f50" colspan="1" class="t5" data-v="5">
+                    總代
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="5"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="f51" colspan="1" class="t6" data-v="6">
+                    股東
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="6"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="f52" colspan="1" class="t7" data-v="7">
+                    大股東
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="7"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="f40" colspan="1" class="t8" data-v="8">
+                    總監
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="8"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="f53" colspan="1" class="t9" data-v="9">
+                    大總監
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      data-idx="9"
+                      value="0"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                  <th lang="b2" colspan="1" data-idx="99" rowspan="2" class="t99">
+                    成數
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      data-show="0"
+                      value="0"
+                      data-idx="99"
+                      onclick="billfn.showcol(this)"
+                    />
+                  </th>
+                </tr>
+                <tr>
+                  <th class="w1" style="display: none">返水</th>
+                  <th>結果</th>
+                  <th class="w3" onclick="billfn.showcol(this)" style="display: none">
+                    <span data-show="0" value="0" data-idx="3" data-v="3">▶</span
+                    ><span class="w3s0">上級返水</span><span class="w3s1">未拆帳</span>
+                  </th>
+                  <th data-v="3">結果</th>
+                  <th
+                    class="w5"
+                    data-v="5"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="5">▶</span>
+                    <span class="w5s0">上級返水</span><span class="w5s1">未拆帳</span>
+                  </th>
+                  <th data-v="5">結果</th>
+                  <th
+                    class="w6"
+                    data-v="6"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="6">▶</span>
+                    <span class="w6s0">上級返水</span><span class="w6s1">未拆帳</span>
+                  </th>
+                  <th data-v="6">結果</th>
+                  <th
+                    class="w7"
+                    data-v="7"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="7">▶</span>
+                    <span class="w7s0">上級返水</span><span class="w7s1">未拆帳</span>
+                  </th>
+                  <th data-v="7">結果</th>
+                  <th
+                    class="w8"
+                    data-v="8"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="8">▶</span>
+                    <span class="w8s0">上級返水</span><span class="w8s1">未拆帳</span>
+                  </th>
+                  <th data-v="8">結果</th>
+                  <th
+                    class="w9"
+                    data-v="9"
+                    onclick="billfn.showcol(this)"
+                    style="display: none"
+                  >
+                    <span data-show="0" value="0" data-idx="9">▶</span>
+                    <span class="w9s0">上級返水</span><span class="w9s1">未拆帳</span>
+                  </th>
+                  <th data-v="9">結果</th>
+                  <th lang="b2" class="w99" style="display: none">成數</th>
+                  <th class="w99" style="display: none">備註</th>
+                </tr>
+              </thead>
+              <tbody id="betRecordsBody">
+                <tr>
+                  <td style="text-align: center">2026/06/13 14:24:59</td>
+                  <td style="text-align: center">
+                    讓分盤<br />140544841<br /><span style="color: blue"
+                    >k117057-紅可樂</span
+                    >
+                  </td>
+                  <td style="text-align: left; white-space: nowrap">
+                    <div>
+                      美棒-MLB 美國職棒-全場早餐-台盤讓分<br />洛克達爾 V.S 萊德(主)<br />開賽時間:2026-06-14 14:30
+                    </div>
+                  </td>
+                  <td>3,000</td>
+                  <td>3,000</td>
+                  <td class="w1" style="display: none">0</td>
+                  <td><span style="color: green">2,970</span></td>
+                  <td class="w3" data-v="3" style="display: none">
+                    <span class="w3s0"><span style="color: green">30</span></span
+                    ><span class="w3s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="3"><span style="color: green">3,000</span></td>
+                  <td class="w5" data-v="5" style="display: none">
+                    <span class="w5s0"><span style="color: green">1</span></span
+                    ><span class="w5s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="5"><span style="color: green">150</span></td>
+                  <td class="w6" data-v="6" style="display: none">
+                    <span class="w6s0"><span style="color: green">1</span></span
+                    ><span class="w6s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="6"><span style="color: green">150</span></td>
+                  <td class="w7" data-v="7" style="display: none">
+                    <span class="w7s0"><span style="color: green">1</span></span
+                    ><span class="w7s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="7"><span style="color: green">150</span></td>
+                  <td class="w8" data-v="8" style="display: none">
+                    <span class="w8s0"><span style="color: green">1</span></span
+                    ><span class="w8s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="8"><span style="color: green">150</span></td>
+                  <td class="w9" data-v="9" style="display: none">
+                    <span class="w9s0"><span style="color: green">0</span></span
+                    ><span class="w9s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="9"><span style="color: green">90</span></td>
+                  <td class="w99" style="display: none">
+                    <div
+                      class="row p-2"
+                      style="margin: 0; background-color: #c4e3cb; width: 270px"
+                    >
+                      <div class="col-2">成數:</div>
+                      <div class="col-10 p-0">0/95/95/95/95/97</div>
+                    </div>
+                    <div
+                      class="row p-2"
+                      style="margin: 0; background-color: #f4f9f4; width: 270px"
+                    >
+                      <div class="col-2">反水:</div>
+                      <div class="col-10 p-0">0/100/100/100/100/100/100</div>
+                    </div>
+                  </td>
+                  <td class="w99" style="display: none"></td>
+                </tr>
+                <tr>
+                  <td colspan="3">合計</td>
+                  <td>3,000</td>
+                  <td>3,000</td>
+                  <td class="w1" style="display: none">0</td>
+                  <td><span style="color: green">2,970</span></td>
+                  <td class="w3" data-v="3" style="display: none">
+                    <span class="w3s0"><span style="color: green">30</span></span
+                    ><span class="w3s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="3"><span style="color: green">3,000</span></td>
+                  <td class="w5" data-v="5" style="display: none">
+                    <span class="w5s0"><span style="color: green">1</span></span
+                    ><span class="w5s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="5"><span style="color: green">150</span></td>
+                  <td class="w6" data-v="6" style="display: none">
+                    <span class="w6s0"><span style="color: green">1</span></span
+                    ><span class="w6s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="6"><span style="color: green">150</span></td>
+                  <td class="w7" data-v="7" style="display: none">
+                    <span class="w7s0"><span style="color: green">1</span></span
+                    ><span class="w7s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="7"><span style="color: green">150</span></td>
+                  <td class="w8" data-v="8" style="display: none">
+                    <span class="w8s0"><span style="color: green">1</span></span
+                    ><span class="w8s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="8"><span style="color: green">150</span></td>
+                  <td class="w9" data-v="9" style="display: none">
+                    <span class="w9s0"><span style="color: green">0</span></span
+                    ><span class="w9s1"><span style="color: green">3,000</span></span>
+                  </td>
+                  <td data-v="9"><span style="color: green">90</span></td>
+                  <td class="w99" style="display: none"></td>
+                  <td class="w99" style="display: none"></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -1087,12 +1360,14 @@
       </div>
     </div>
 
-    <!-- 載入順序：supabase → client → data → render → edit → date -->
+    <!-- 載入順序：supabase → client → data → render → edit → bet-records → date -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="js/supabase-client.js"></script>
     <script src="js/data.js"></script>
     <script src="js/render.js"></script>
     <script src="js/edit.js"></script>
+    <script src="js/bet-records-data.js"></script>
+    <script src="js/bet-records-render.js"></script>
     <script src="js/date.js"></script>
   </body>
 </html>
