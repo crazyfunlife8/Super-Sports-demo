@@ -1,0 +1,25 @@
+name: Sync Taiwan Baseball
+
+on:
+  schedule:
+    - cron: '0 2,6,10,14,18,22 * * *'  # 每 4 小時一次（UTC），台灣時間 10/14/18/22/2/6
+  workflow_dispatch:                      # 允許手動觸發
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run sync script
+        run: node scripts/sync-taiwan-baseball.js
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

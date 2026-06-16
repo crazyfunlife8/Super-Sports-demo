@@ -1,0 +1,12 @@
+{
+  "name": "betting-platform-sync",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "sync-baseball": "node scripts/sync-taiwan-baseball.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.0.0"
+  }
+}
