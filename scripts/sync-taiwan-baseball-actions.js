@@ -1,14 +1,19 @@
 // scripts/sync-taiwan-baseball-actions.js
 // 由 GitHub Actions 每天 UTC 00:00（台灣時間 08:00）執行
 // 透過 ScrapingBee 繞過台彩 IP 封鎖，同步 NPB/CPBL 資料至 Supabase
+// 比分來源：Sportradar Fan Hub（statshub.sportradar.com + sh.fn.sportradar.com）
 
 const { createClient } = require('@supabase/supabase-js');
 
-const SCRAPINGBEE  = 'https://app.scrapingbee.com/api/v1/';
-const SETTLE_URL   = 'https://api3rd.sportslottery.com.tw/services/content/get';
-const LEAGUE_MAP   = { '日本職棒': 'baseball_npb', '中華職棒': 'baseball_cpbl' };
+const SCRAPINGBEE = 'https://app.scrapingbee.com/api/v1/';
+const LEAGUE_MAP  = { '日本職棒': 'baseball_npb', '中華職棒': 'baseball_cpbl' };
 
-/* ── ScrapingBee GET（住宅 IP 代理） ── */
+const SR_STATSHUB = 'https://statshub.sportradar.com/taiwansportslottery/zht/sport/3';
+const SR_CDN      = 'https://sh.fn.sportradar.com/taiwansportslottery/zht/Asia:Shanghai/gismo/unified_sport_matches/3';
+const SR_NPB_RCID = 211;  // 日本職棒
+const SR_CPBL_RCID = 397; // 中華職棒
+
+/* ── ScrapingBee GET → JSON ── */
 async function sbGet(targetUrl) {
   const url = new URL(SCRAPINGBEE);
   url.searchParams.set('api_key',         process.env.SCRAPINGBEE_API_KEY);
@@ -20,67 +25,68 @@ async function sbGet(targetUrl) {
   const res = await fetch(url.toString());
   if (!res.ok) {
     const txt = await res.text();
-    throw new Error(`ScrapingBee ${res.status}: ${txt.slice(0, 300)}`);
+    throw new Error(`ScrapingBee GET JSON ${res.status}: ${txt.slice(0, 300)}`);
   }
   return res.json();
 }
 
-/* ── 解析台彩結算回應 ── */
-function _parseSettleJson(json) {
-  const events = json?.content?.data?.settledevents ?? [];
-  if (!events.length) return null;
-  const ev = events[0];
-  return {
-    full_home_score: Number(ev.homescoreline) || 0,
-    full_away_score: Number(ev.awayscoreline) || 0,
-    status:    'completed',
-    synced_at: new Date().toISOString(),
-  };
+
+/* ── 從 statshub HTML 取得 Sportradar auth token（直接 fetch，全球可存取） ── */
+async function fetchSRToken(date) {
+  const res = await fetch(`${SR_STATSHUB}?date=${date}`);
+  if (!res.ok) throw new Error(`statshub HTTP ${res.status}`);
+  const html = await res.text();
+  const m = html.match(/exp=\d+~acl=[^~]+~data=[^~]+~hmac=[a-f0-9]+/);
+  if (!m) throw new Error(`statshub HTML 找不到 token（${date}）`);
+  return m[0];
 }
 
-/* ── 台彩結果 API：先直接 POST，失敗改用 ScrapingBee ── */
-async function fetchSettledScore(gameDate, listcode) {
-  const body = JSON.stringify({ type: 'settledEventsByAlias', id: `${gameDate}/${listcode}`, language: 'ZH' });
+/* ── 取得指定日期的 NPB/CPBL 比分 map（直接 fetch） ── */
+async function fetchSRScores(date, token) {
+  const res = await fetch(`${SR_CDN}/${date}/0?T=${encodeURIComponent(token)}`);
+  if (!res.ok) throw new Error(`Sportradar CDN HTTP ${res.status}`);
+  const json = await res.json();
 
-  /* 嘗試直接 POST（api3rd 可能不封鎖） */
-  try {
-    const res = await fetch(SETTLE_URL, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,
-    });
-    if (res.ok) {
-      const json = await res.json();
-      const parsed = _parseSettleJson(json);
-      if (parsed) return parsed;
+  const byName = {};  // key: "home_team|away_team"
+  const byUts  = [];  // [{uts, home_score, away_score, home_name, away_name}]
+
+  const categories = json?.doc?.[0]?.data?.sport?.realcategories ?? [];
+  for (const cat of categories) {
+    const rcid = Number(cat._id ?? cat.id ?? cat.rcid);
+    if (rcid !== SR_NPB_RCID && rcid !== SR_CPBL_RCID) continue;
+
+    for (const tour of (cat.tournaments ?? [])) {
+      for (const match of (tour.matches ?? [])) {
+        const homeName  = String(match.home?.name ?? '').trim();
+        const awayName  = String(match.away?.name ?? '').trim();
+        const homeScore = match.result?.home ?? null;
+        const awayScore = match.result?.away ?? null;
+        const uts       = Number(match._dt?.uts ?? 0);
+
+        if (homeScore === null && awayScore === null) continue; // 尚未開打
+
+        const key = `${homeName}|${awayName}`;
+        byName[key] = { home_score: Number(homeScore), away_score: Number(awayScore) };
+        if (uts) byUts.push({ uts, home_score: Number(homeScore), away_score: Number(awayScore), home_name: homeName, away_name: awayName });
+      }
     }
-  } catch { /* fall through to ScrapingBee */ }
-
-  /* 備援：ScrapingBee 直接轉發 JSON body（POST to ScrapingBee → 它 forward 給 target） */
-  try {
-    const url = new URL(SCRAPINGBEE);
-    url.searchParams.set('api_key',       process.env.SCRAPINGBEE_API_KEY);
-    url.searchParams.set('url',           SETTLE_URL);
-    url.searchParams.set('render_js',     'false');
-    url.searchParams.set('premium_proxy', 'true');
-
-    const res = await fetch(url.toString(), {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body,   /* ScrapingBee 會把此 JSON body 原封不動 forward 給 target */
-    });
-    if (!res.ok) {
-      console.log(`  ⚠️ ScrapingBee settle ${res.status}`);
-      return null;
-    }
-    const json = await res.json();
-    const parsed = _parseSettleJson(json);
-    if (!parsed) console.log(`  ⚠️ settle response 無結算資料`);
-    return parsed;
-  } catch (e) {
-    console.log(`  ⚠️ ScrapingBee settle error: ${e.message}`);
-    return null;
   }
+
+  return { byName, byUts };
+}
+
+/* ── 用隊名精確比對，失敗則用開賽時間±30分鐘備援 ── */
+function findScore(match, scoreMap) {
+  const key = `${match.home_team}|${match.away_team}`;
+  if (scoreMap.byName[key]) return scoreMap.byName[key];
+
+  // 時間備援
+  const matchUts = Math.floor(new Date(match.commence_time).getTime() / 1000);
+  const WINDOW = 30 * 60;
+  for (const entry of scoreMap.byUts) {
+    if (Math.abs(entry.uts - matchUts) <= WINDOW) return { home_score: entry.home_score, away_score: entry.away_score };
+  }
+  return null;
 }
 
 /* ── 賠率工具 ── */
@@ -183,33 +189,69 @@ async function main() {
     console.log(`✅ 寫入/更新 ${matchesSynced} 筆`);
   }
 
-  /* Step 5: 查詢待補比分（今天台灣零時之前） */
-  const twNow      = new Date(Date.now() + 8*60*60*1000);
-  const twMidnight = Date.UTC(twNow.getUTCFullYear(), twNow.getUTCMonth(), twNow.getUTCDate());
-  const cutoff     = new Date(twMidnight - 8*60*60*1000).toISOString();
+  /* Step 5: 查詢待補比分（4 小時前開打、尚未 completed） */
+  const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
 
   const { data: pending, error: pendingErr } = await supabase.from('matches')
-    .select('match_id, listcode, commence_time')
+    .select('match_id, home_team, away_team, commence_time')
     .in('sport', ['baseball_npb','baseball_cpbl'])
     .neq('status','completed')
-    .lt('commence_time', cutoff)
-    .not('listcode','is',null)
-    .neq('listcode','');
+    .lt('commence_time', cutoff);
 
   if (pendingErr) throw new Error(`query pending: ${pendingErr.message}`);
   console.log(`🔍 待補比分: ${pending?.length ?? 0} 場`);
 
-  /* Step 6: 補比分 */
-  let scoresUpdated = 0;
-  for (const match of (pending||[])) {
-    const twMs     = new Date(match.commence_time).getTime() + 8*60*60*1000;
-    const gameDate = new Date(twMs).toISOString().slice(0,10).replace(/-/g,'');
-    const score    = await fetchSettledScore(gameDate, match.listcode);
-    if (!score) { console.log(`  ⏳ ${match.match_id} 尚未有結果`); continue; }
+  if (!pending?.length) {
+    console.log('\n🎉 完成！同步', matchesSynced, '筆，補分 0 筆');
+    return;
+  }
 
-    const { error } = await supabase.from('matches').update(score).eq('match_id', match.match_id);
-    if (error) { console.error(`  ❌ ${match.match_id}: ${error.message}`); }
-    else       { scoresUpdated++; console.log(`  ✅ ${match.match_id} 客:${score.full_away_score} 主:${score.full_home_score}`); }
+  /* Step 6: 按日期分組，每日取一次 token + scores */
+  const byDate = {};
+  for (const match of pending) {
+    const twMs   = new Date(match.commence_time).getTime() + 8*60*60*1000;
+    const dateStr = new Date(twMs).toISOString().slice(0, 10); // YYYY-MM-DD
+    if (!byDate[dateStr]) byDate[dateStr] = [];
+    byDate[dateStr].push(match);
+  }
+
+  let scoresUpdated = 0;
+  for (const [date, matches] of Object.entries(byDate)) {
+    console.log(`\n📅 ${date} 共 ${matches.length} 場待補分...`);
+
+    let scoreMap;
+    try {
+      console.log(`  🔑 取得 Sportradar token...`);
+      const token = await fetchSRToken(date);
+      console.log(`  ✅ token 取得`);
+      scoreMap = await fetchSRScores(date, token);
+      console.log(`  ✅ Sportradar 比分 byName:${Object.keys(scoreMap.byName).length} 筆，byUts:${scoreMap.byUts.length} 筆`);
+    } catch (e) {
+      console.error(`  ❌ Sportradar 取分失敗（${date}）: ${e.message}`);
+      continue;
+    }
+
+    for (const match of matches) {
+      const found = findScore(match, scoreMap);
+      if (!found) {
+        console.log(`  ⏳ ${match.match_id} ${match.home_team} vs ${match.away_team} 無比分`);
+        continue;
+      }
+
+      const { error } = await supabase.from('matches').update({
+        full_home_score: found.home_score,
+        full_away_score: found.away_score,
+        status:    'completed',
+        synced_at: new Date().toISOString(),
+      }).eq('match_id', match.match_id);
+
+      if (error) {
+        console.error(`  ❌ ${match.match_id}: ${error.message}`);
+      } else {
+        scoresUpdated++;
+        console.log(`  ✅ ${match.match_id} ${match.home_team} ${found.home_score}:${found.away_score} ${match.away_team}`);
+      }
+    }
   }
 
   console.log(`\n🎉 完成！同步 ${matchesSynced} 筆，補分 ${scoresUpdated} 筆`);
