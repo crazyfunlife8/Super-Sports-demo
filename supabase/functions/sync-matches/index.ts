@@ -1,7 +1,9 @@
 /* sync-matches/index.ts — Supabase Edge Function
-   SportsGameOdds API → Supabase matches 表同步
+   同步所有棒球賽事：
+     MLB  → SportsGameOdds API（賠率 + 比分）
+     CPBL/NPB → 台彩 blob3rd via ScrapingBee（賠率）+ Sportradar 直接 fetch（比分）
    部署：supabase functions deploy sync-matches
-   環境變數：SPORTSGAMEODDS_API_KEY */
+   環境變數：SPORTSGAMEODDS_API_KEY、SCRAPINGBEE_API_KEY */
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
@@ -10,14 +12,14 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-/* ── 聯賽 ID 對應內部 sport key ── */
+/* ════════════════════════════════════════════
+   MLB — SportsGameOdds
+   ════════════════════════════════════════════ */
+
 const LEAGUE_MAP: Record<string, string> = {
   MLB:  'baseball_mlb',
-  NPB:  'baseball_npb',   // 升級後啟用
-  CPBL: 'baseball_cpbl',  // 升級後啟用
 };
 
-/* ── MLB 30 隊中文名稱對照表 ── */
 const TEAM_NAMES_CN: Record<string, string> = {
   /* AL East */
   'NEW_YORK_YANKEES_MLB':     '紐約洋基',
@@ -50,18 +52,15 @@ const TEAM_NAMES_CN: Record<string, string> = {
   'MILWAUKEE_BREWERS_MLB':    '密爾瓦基釀酒人',
   'CINCINNATI_REDS_MLB':      '辛辛那提紅人',
   'PITTSBURGH_PIRATES_MLB':   '匹茲堡海盜',
-  'STLOUIS_CARDINALS_MLB':   '聖路易紅雀',
+  'STLOUIS_CARDINALS_MLB':    '聖路易紅雀',
   /* NL West */
   'LOS_ANGELES_DODGERS_MLB':  '洛杉磯道奇',
   'SAN_FRANCISCO_GIANTS_MLB': '舊金山巨人',
   'SAN_DIEGO_PADRES_MLB':     '聖地牙哥教士',
   'ARIZONA_DIAMONDBACKS_MLB': '亞利桑那響尾蛇',
   'COLORADO_ROCKIES_MLB':     '科羅拉多落磯',
-  /* NPB — 升級後補齊 */
-  /* CPBL — 升級後補齊 */
 };
 
-/* ── 美式賠率 → 香港賠率（= 歐式小數 − 1，即每押 1 元的純獲利） ── */
 function toHKOdds(americanOdds: string | number | null | undefined): number {
   if (americanOdds == null || americanOdds === '') return 0;
   const n = Number(americanOdds);
@@ -70,16 +69,12 @@ function toHKOdds(americanOdds: string | number | null | undefined): number {
   return parseFloat((100 / Math.abs(n)).toFixed(3));
 }
 
-/* ── 單一賽事物件 → matches 表格式 ── */
 function transformEvent(event: Record<string, unknown>, leagueID: string) {
   const sport   = LEAGUE_MAP[leagueID] || leagueID.toLowerCase();
   const status  = (event.status  as Record<string, unknown>) || {};
   const teams   = (event.teams   as Record<string, Record<string, unknown>>) || {};
   const oddsMap = (event.odds    as Record<string, Record<string, unknown>>) || {};
 
-  /* 比分：results.<periodID>.<statEntityID>.points
-     baseball: points = runs scored
-     逐局：1i～9i；半場（前5局）= 1i+2i+3i+4i+5i 自行加總 */
   type ResultsMap = Record<string, Record<string, Record<string, number>>>;
   const results = (event.results as ResultsMap) || {};
   const gameRes = results['game'] || {};
@@ -103,7 +98,6 @@ function transformEvent(event: Record<string, unknown>, leagueID: string) {
   const ml_away  = find('ml', 'away');
   const eo_even  = find('eo', 'even');
   const eo_odd   = find('eo', 'odd');
-  /* 首半場（1h = 前5局）各盤口 */
   const fi_home     = find('sp', 'home',  '1h');
   const fi_away     = find('sp', 'away',  '1h');
   const fi_ou_over  = find('ou', 'over',  '1h');
@@ -116,20 +110,16 @@ function transformEvent(event: Record<string, unknown>, leagueID: string) {
   const homeNames = (teams.home?.names  as Record<string, string>) || {};
   const awayNames = (teams.away?.names  as Record<string, string>) || {};
 
-  /* status 對應：
-     completed → 'completed'（歷史賽事頁顯示）
-     started   → 'started' （即時注單頁 + 歷史賽事頁都顯示）
-     其餘      → 'upcoming'（僅即時注單頁顯示） */
   const eventStatus = status.completed ? 'completed'
     : status.started ? 'started'
     : 'upcoming';
 
   return {
-    match_id:       String(event.eventID ?? ''),
+    match_id:      String(event.eventID ?? ''),
     sport,
-    home_team:      TEAM_NAMES_CN[homeId] || homeId || homeNames.long,
-    away_team:      TEAM_NAMES_CN[awayId] || awayId || awayNames.long,
-    commence_time:  String(status.startsAt ?? ''),
+    home_team:     TEAM_NAMES_CN[homeId] || homeId || homeNames.long,
+    away_team:     TEAM_NAMES_CN[awayId] || awayId || awayNames.long,
+    commence_time: String(status.startsAt ?? ''),
     spread: {
       home_line: sp_home?.bookSpread != null ? String(sp_home.bookSpread) : '',
       away_line: sp_away?.bookSpread != null ? String(sp_away.bookSpread) : '',
@@ -152,118 +142,310 @@ function transformEvent(event: Record<string, unknown>, leagueID: string) {
       odd_odds:  toHKOdds(eo_odd?.bookOdds  as string),
     },
     first_inning: {
-      /* 讓分（sp, 1h） */
       home_line:      fi_home?.bookSpread != null ? String(fi_home.bookSpread) : '',
       away_line:      fi_away?.bookSpread != null ? String(fi_away.bookSpread) : '',
       home_odds:      toHKOdds(fi_home?.bookOdds as string),
       away_odds:      toHKOdds(fi_away?.bookOdds as string),
       home_book_odds: fi_home?.bookOdds != null ? Number(fi_home.bookOdds) : null,
       away_book_odds: fi_away?.bookOdds != null ? Number(fi_away.bookOdds) : null,
-      /* 大小盤（ou, 1h） */
       total_line:  String(fi_ou_over?.bookOverUnder ?? ''),
       over_odds:   toHKOdds(fi_ou_over?.bookOdds  as string),
       under_odds:  toHKOdds(fi_ou_under?.bookOdds as string),
-      /* 獨贏（ml, 1h） */
       ml_home_odds: toHKOdds(fi_ml_home?.bookOdds as string),
       ml_away_odds: toHKOdds(fi_ml_away?.bookOdds as string),
     },
-    /* 比分（僅已結束賽事有值，進行中/未開賽為 null） */
     full_home_score: gameRes['home']?.['points'] ?? null,
     full_away_score: gameRes['away']?.['points'] ?? null,
     half_home_score: halfHomeScore,
     half_away_score: halfAwayScore,
-    status:       eventStatus,
-    synced_at:    new Date().toISOString(),
+    status:    eventStatus,
+    synced_at: new Date().toISOString(),
   };
 }
 
-/* ── 拉取未結束賽事（upcoming + live） ── */
-async function fetchActiveEvents(apiKey: string, leagueID: string): Promise<Record<string, unknown>[]> {
+async function fetchActiveEvents(apiKey: string, leagueID: string) {
   const url = new URL('https://api.sportsgameodds.com/v2/events/');
   url.searchParams.set('apiKey', apiKey);
   url.searchParams.set('leagueID', leagueID);
   url.searchParams.set('limit', '50');
   url.searchParams.set('finalized', 'false');
-
   const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API ${leagueID} active error: ${res.status}`);
-
+  if (!res.ok) throw new Error(`SGO ${leagueID} active: ${res.status}`);
   const json = await res.json() as { data?: Record<string, unknown>[] };
   return json.data || [];
 }
 
-/* ── 拉取近 2 天已結束賽事（含比分） ── */
-async function fetchFinalizedEvents(apiKey: string, leagueID: string): Promise<Record<string, unknown>[]> {
-  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000)
-    .toISOString().slice(0, 10);
-
+async function fetchFinalizedEvents(apiKey: string, leagueID: string) {
+  const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const url = new URL('https://api.sportsgameodds.com/v2/events/');
   url.searchParams.set('apiKey', apiKey);
   url.searchParams.set('leagueID', leagueID);
   url.searchParams.set('limit', '50');
   url.searchParams.set('finalized', 'true');
   url.searchParams.set('startsAfter', twoDaysAgo);
-
   const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`API ${leagueID} finalized error: ${res.status}`);
-
+  if (!res.ok) throw new Error(`SGO ${leagueID} finalized: ${res.status}`);
   const json = await res.json() as { data?: Record<string, unknown>[] };
   return json.data || [];
 }
 
-/* ── Edge Function 主體 ── */
+/* ════════════════════════════════════════════
+   CPBL / NPB — 台彩 blob3rd + Sportradar
+   ════════════════════════════════════════════ */
+
+const SCRAPINGBEE   = 'https://app.scrapingbee.com/api/v1/';
+const SR_STATSHUB   = 'https://statshub.sportradar.com/taiwansportslottery/zht/sport/3';
+const SR_CDN        = 'https://sh.fn.sportradar.com/taiwansportslottery/zht/Asia:Shanghai/gismo/unified_sport_matches/3';
+const SR_NPB_RCID   = 211;
+const SR_CPBL_RCID  = 397;
+const TW_LEAGUE_MAP: Record<string, string> = { '日本職棒': 'baseball_npb', '中華職棒': 'baseball_cpbl' };
+
+async function sbGet(targetUrl: string, sbKey: string): Promise<unknown> {
+  const url = new URL(SCRAPINGBEE);
+  url.searchParams.set('api_key',       sbKey);
+  url.searchParams.set('url',           targetUrl);
+  url.searchParams.set('render_js',     'false');
+  url.searchParams.set('premium_proxy', 'true');
+  url.searchParams.set('block_resources','false');
+  const res = await fetch(url.toString());
+  if (!res.ok) throw new Error(`ScrapingBee ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return res.json();
+}
+
+/* ── 台彩賠率工具 ── */
+function twOdds(pd: unknown, pu: unknown): number {
+  const p = Number(pd), u = Number(pu);
+  if (!p || !u || isNaN(p) || isNaN(u)) return 0;
+  return parseFloat((u / p).toFixed(3));
+}
+function twAwayLine(mv: string): string {
+  if (!mv) return '';
+  const n = parseFloat(mv);
+  if (isNaN(n) || n === 0) return mv;
+  return n < 0 ? `+${Math.abs(n)}` : `-${n}`;
+}
+function pickMainMarket(ms: Record<string, unknown>[], ti: number) {
+  const list = ms.filter(m => Number(m.ti) === ti);
+  if (!list.length) return null;
+  if (list.length === 1) return list[0];
+  let best = list[0], bestSum = 0;
+  for (const m of list) {
+    const s = ((m.cs as Record<string, unknown>[]) || []).reduce((a, c) => a + (Number(c.pd) || 0), 0);
+    if (s > bestSum) { bestSum = s; best = m; }
+  }
+  return best;
+}
+const oddsBy = (cs: Record<string, unknown>[], v: string) => {
+  const c = (cs || []).find(x => x.v === v);
+  return c ? twOdds(c.pd, c.pu) : 0;
+};
+const oddsByName = (cs: Record<string, unknown>[], kw: string) => {
+  const c = (cs || []).find(x => String(x.name || '').includes(kw));
+  return c ? twOdds(c.pd, c.pu) : 0;
+};
+
+function parseTWGame(game: Record<string, unknown>) {
+  const tn = String(game.tn ?? '').trim().replace(/\r/g, '');
+  const sport = TW_LEAGUE_MAP[tn];
+  if (!sport) return null;
+
+  const ms = (game.ms as Record<string, unknown>[]) || [];
+  const sp = pickMainMarket(ms, 358), spCs = (sp?.cs as Record<string, unknown>[]) || [], spLine = sp ? String(sp.mv ?? '') : '';
+  const ou = pickMainMarket(ms, 360), ouCs = (ou?.cs as Record<string, unknown>[]) || [], ouLine = ou ? String(ou.mv ?? '') : '';
+  const ml = pickMainMarket(ms, 354), mlCs = (ml?.cs as Record<string, unknown>[]) || [];
+  const oe = pickMainMarket(ms, 366), oeCs = (oe?.cs as Record<string, unknown>[]) || [];
+  const fim = pickMainMarket(ms, 376), fimCs = (fim?.cs as Record<string, unknown>[]) || [];
+  const fio = pickMainMarket(ms, 378), fioCs = (fio?.cs as Record<string, unknown>[]) || [], fioLine = fio ? String(fio.mv ?? '') : '';
+
+  const kt = String(game.kt ?? '');
+  const commenceTime = kt ? new Date(kt).toISOString() : '';
+  const gameTime = kt ? new Date(kt) : null;
+  const status = (gameTime && gameTime <= new Date()) ? 'started' : 'upcoming';
+
+  return {
+    match_id: String(game.id ?? '').trim(), sport,
+    home_team: String(game.hn ?? '').trim().replace(/\r/g, ''),
+    away_team: String(game.an ?? '').trim().replace(/\r/g, ''),
+    commence_time: commenceTime, listcode: String(game.no ?? ''), status,
+    spread:      { home_line: spLine, away_line: twAwayLine(spLine), home_odds: oddsBy(spCs, 'H'), away_odds: oddsBy(spCs, 'A'), home_book_odds: null, away_book_odds: null },
+    totals:      { line: ouLine, over_odds: oddsBy(ouCs, 'A'), under_odds: oddsBy(ouCs, 'H') },
+    moneyline:   { home_odds: oddsBy(mlCs, 'H'), away_odds: oddsBy(mlCs, 'A') },
+    odd_even:    { odd_odds: oddsByName(oeCs, '單'), even_odds: oddsByName(oeCs, '雙') },
+    first_inning: {
+      home_line: '', away_line: '', home_odds: 0, away_odds: 0, home_book_odds: null, away_book_odds: null,
+      total_line: fioLine, over_odds: oddsBy(fioCs, 'A'), under_odds: oddsBy(fioCs, 'H'),
+      ml_home_odds: oddsBy(fimCs, 'H'), ml_away_odds: oddsBy(fimCs, 'A'),
+    },
+    full_home_score: null, full_away_score: null, half_home_score: null, half_away_score: null,
+    synced_at: new Date().toISOString(),
+  };
+}
+
+/* ── Sportradar token + scores（全球直接 fetch，不需 ScrapingBee） ── */
+async function fetchSRToken(date: string): Promise<string> {
+  const res = await fetch(`${SR_STATSHUB}?date=${date}`);
+  if (!res.ok) throw new Error(`statshub HTTP ${res.status}`);
+  const html = await res.text();
+  const m = html.match(/exp=\d+~acl=[^~]+~data=[^~]+~hmac=[a-f0-9]+/);
+  if (!m) throw new Error(`statshub 找不到 token（${date}）`);
+  return m[0];
+}
+
+interface ScoreEntry { uts: number; home_score: number; away_score: number; }
+interface ScoreMap { byName: Record<string, { home_score: number; away_score: number }>; byUts: ScoreEntry[]; }
+
+async function fetchSRScores(date: string, token: string): Promise<ScoreMap> {
+  const res = await fetch(`${SR_CDN}/${date}/0?T=${encodeURIComponent(token)}`);
+  if (!res.ok) throw new Error(`Sportradar CDN HTTP ${res.status}`);
+  const json = await res.json() as Record<string, unknown>;
+
+  const byName: ScoreMap['byName'] = {};
+  const byUts:  ScoreEntry[] = [];
+  const categories = ((json?.doc as Record<string, unknown>[])?.[0]?.data as Record<string, unknown>)?.sport as Record<string, unknown>;
+  const realcats = (categories?.realcategories as Record<string, unknown>[]) ?? [];
+
+  for (const cat of realcats) {
+    const rcid = Number((cat._id ?? cat.id ?? cat.rcid) as unknown);
+    if (rcid !== SR_NPB_RCID && rcid !== SR_CPBL_RCID) continue;
+    for (const tour of ((cat.tournaments as Record<string, unknown>[]) ?? [])) {
+      for (const match of ((tour.matches as Record<string, unknown>[]) ?? [])) {
+        const result   = match.result as Record<string, unknown> ?? {};
+        const homeScore = result.home ?? null;
+        const awayScore = result.away ?? null;
+        if (homeScore === null && awayScore === null) continue;
+        const homeName = String((match.home as Record<string, unknown>)?.name ?? '').trim();
+        const awayName = String((match.away as Record<string, unknown>)?.name ?? '').trim();
+        const uts = Number(((match._dt as Record<string, unknown>)?.uts) ?? 0);
+        byName[`${homeName}|${awayName}`] = { home_score: Number(homeScore), away_score: Number(awayScore) };
+        if (uts) byUts.push({ uts, home_score: Number(homeScore), away_score: Number(awayScore) });
+      }
+    }
+  }
+  return { byName, byUts };
+}
+
+function findScore(match: { home_team: string; away_team: string; commence_time: string }, scoreMap: ScoreMap) {
+  const key = `${match.home_team}|${match.away_team}`;
+  if (scoreMap.byName[key]) return scoreMap.byName[key];
+  const matchUts = Math.floor(new Date(match.commence_time).getTime() / 1000);
+  for (const entry of scoreMap.byUts) {
+    if (Math.abs(entry.uts - matchUts) <= 1800) return { home_score: entry.home_score, away_score: entry.away_score };
+  }
+  return null;
+}
+
+/* ════════════════════════════════════════════
+   Edge Function 主體
+   ════════════════════════════════════════════ */
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
   }
 
   try {
-    const apiKey = Deno.env.get('SPORTSGAMEODDS_API_KEY');
-    if (!apiKey) throw new Error('環境變數 SPORTSGAMEODDS_API_KEY 未設定');
+    const sgoKey = Deno.env.get('SPORTSGAMEODDS_API_KEY');
+    const sbKey  = Deno.env.get('SCRAPINGBEE_API_KEY');
+    if (!sgoKey) throw new Error('環境變數 SPORTSGAMEODDS_API_KEY 未設定');
+    if (!sbKey)  throw new Error('環境變數 SCRAPINGBEE_API_KEY 未設定');
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     );
 
-    /* 目前免費方案只有 MLB；升級後把 'NPB', 'CPBL' 加回來即可 */
-    const leagues = ['MLB'];
-
-    let totalUpdated = 0;
-
-    for (const leagueID of leagues) {
-      console.log(`⏳ 同步 ${leagueID}...`);
-
-      /* 同時拉取：未結束 + 近 7 天已結束 */
+    /* ── MLB ── */
+    console.log('⏳ 同步 MLB...');
+    let mlbUpdated = 0;
+    try {
       const [activeEvents, finalizedEvents] = await Promise.all([
-        fetchActiveEvents(apiKey, leagueID),
-        fetchFinalizedEvents(apiKey, leagueID),
+        fetchActiveEvents(sgoKey, 'MLB'),
+        fetchFinalizedEvents(sgoKey, 'MLB'),
       ]);
-
-      /* 去重（同一 eventID 以 finalized 版本為準，因為有比分） */
       const eventMap = new Map<string, Record<string, unknown>>();
       for (const ev of activeEvents)    eventMap.set(String(ev.eventID), ev);
       for (const ev of finalizedEvents) eventMap.set(String(ev.eventID), ev);
+      const rows = Array.from(eventMap.values()).map(ev => transformEvent(ev, 'MLB'));
+      if (rows.length > 0) {
+        const { error } = await supabase.from('matches').upsert(rows, { onConflict: 'match_id' });
+        if (error) throw new Error(`upsert MLB: ${error.message}`);
+        mlbUpdated = rows.length;
+      }
+      console.log(`  ✅ MLB ${mlbUpdated} 筆`);
+    } catch (e) {
+      console.error('  ❌ MLB:', (e as Error).message);
+    }
 
-      const events = Array.from(eventMap.values());
-      console.log(`  取得 ${activeEvents.length} 筆未結束 + ${finalizedEvents.length} 筆已結束（去重後 ${events.length} 筆）`);
+    /* ── CPBL/NPB 賠率（台彩 via ScrapingBee） ── */
+    console.log('⏳ 同步 CPBL/NPB 賠率...');
+    let twSynced = 0;
+    try {
+      const sports   = await sbGet('https://blob3rd.sportslottery.com.tw/apidata/Pre/Sports.zh.json', sbKey) as Record<string, unknown>[];
+      const baseball = sports.find(s => s.name === '棒球' || s.san === 'BSB');
+      if (!baseball) throw new Error('找不到棒球 sport ID');
+      const games = await sbGet(`https://blob3rd.sportslottery.com.tw/apidata/Pre/${baseball.id}-Games.zh.json`, sbKey) as Record<string, unknown>[];
+      const rows  = games.map(g => parseTWGame(g)).filter(Boolean);
+      if (rows.length > 0) {
+        const ids = rows.map(r => r!.match_id);
+        const { data: completed } = await supabase.from('matches').select('match_id').in('match_id', ids).eq('status', 'completed');
+        const completedSet = new Set((completed || []).map((m: Record<string, string>) => m.match_id));
+        const toUpsert = rows.filter(r => !completedSet.has(r!.match_id));
+        if (toUpsert.length > 0) {
+          const { error } = await supabase.from('matches').upsert(toUpsert, { onConflict: 'match_id' });
+          if (error) throw new Error(`upsert CPBL/NPB: ${error.message}`);
+        }
+        twSynced = toUpsert.length;
+      }
+      console.log(`  ✅ CPBL/NPB ${twSynced} 筆`);
+    } catch (e) {
+      console.error('  ❌ CPBL/NPB 賠率:', (e as Error).message);
+    }
 
-      if (events.length === 0) continue;
+    /* ── CPBL/NPB 比分（Sportradar 直接 fetch） ── */
+    console.log('⏳ 補 CPBL/NPB 比分...');
+    let scoresUpdated = 0;
+    try {
+      const cutoff = new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString();
+      const { data: pending } = await supabase.from('matches')
+        .select('match_id, home_team, away_team, commence_time')
+        .in('sport', ['baseball_npb', 'baseball_cpbl'])
+        .neq('status', 'completed')
+        .lt('commence_time', cutoff);
 
-      const rows = events.map(ev => transformEvent(ev, leagueID));
-
-      const { error } = await supabase
-        .from('matches')
-        .upsert(rows, { onConflict: 'match_id' });
-
-      if (error) throw new Error(`upsert ${leagueID}: ${error.message}`);
-
-      totalUpdated += rows.length;
-      console.log(`  ✅ 寫入 ${rows.length} 筆`);
+      if (pending?.length) {
+        const byDate: Record<string, typeof pending> = {};
+        for (const match of pending) {
+          const twMs = new Date(match.commence_time).getTime() + 8 * 60 * 60 * 1000;
+          const date = new Date(twMs).toISOString().slice(0, 10);
+          if (!byDate[date]) byDate[date] = [];
+          byDate[date].push(match);
+        }
+        for (const [date, matches] of Object.entries(byDate)) {
+          try {
+            const token    = await fetchSRToken(date);
+            const scoreMap = await fetchSRScores(date, token);
+            for (const match of matches) {
+              const found = findScore(match, scoreMap);
+              if (!found) continue;
+              const { error } = await supabase.from('matches').update({
+                full_home_score: found.home_score,
+                full_away_score: found.away_score,
+                status:    'completed',
+                synced_at: new Date().toISOString(),
+              }).eq('match_id', match.match_id);
+              if (!error) scoresUpdated++;
+            }
+          } catch (e) {
+            console.error(`  ⚠️ Sportradar ${date}:`, (e as Error).message);
+          }
+        }
+      }
+      console.log(`  ✅ 補分 ${scoresUpdated} 筆`);
+    } catch (e) {
+      console.error('  ❌ CPBL/NPB 比分:', (e as Error).message);
     }
 
     return new Response(
-      JSON.stringify({ success: true, updated: totalUpdated }),
+      JSON.stringify({ success: true, mlb: mlbUpdated, cpbl_npb: twSynced, scores: scoresUpdated }),
       { headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
     );
   } catch (err) {

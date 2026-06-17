@@ -162,16 +162,16 @@ window.editSvc = {
 
     /* ── 立刻同步 API ── */
     $('#btnSyncApi').on('click', async function () {
-      if (!confirm('立刻從 SportsGameOdds API 同步最新賽事與盤口？')) return;
+      if (!confirm('立刻同步所有賽事？\n・MLB：SportsGameOdds API\n・CPBL/NPB：台彩賠率 + Sportradar 比分')) return;
       try {
         const { data, error } = await _supabase.functions.invoke('sync-matches');
         if (error) throw new Error(error.message);
         const now = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         $('#lastSyncTime').text('上次同步：' + now);
-        alert(`同步完成。\n更新 ${data?.updated ?? 0} 筆賽事。\n同步時間：${now}`);
+        alert(`同步完成（${now}）\nMLB：${data?.mlb ?? 0} 筆\nCPBL/NPB：${data?.cpbl_npb ?? 0} 筆\n補分：${data?.scores ?? 0} 筆`);
         _refreshCurrentPage();
       } catch (e) {
-        alert('同步失敗：' + e.message + '\n\n請確認 Supabase Edge Function「sync-matches」已部署，\n且環境變數 SPORTSGAMEODDS_API_KEY 已設定。');
+        alert('同步失敗：' + e.message + '\n\n請確認 Supabase Edge Function「sync-matches」已部署，\n且環境變數 SPORTSGAMEODDS_API_KEY、SCRAPINGBEE_API_KEY 已設定。');
       }
     });
 
