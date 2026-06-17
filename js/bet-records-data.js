@@ -27,7 +27,8 @@ window.betRecordsDataSvc = {
     const { data, error } = await _supabase
       .from('bet_tickets')
       .insert({
-        ticket_no: ticketNo, account_name: '', bet_type: '讓分盤',
+        ticket_no: ticketNo, created_at: new Date().toISOString(),
+        account_name: '', bet_type: '讓分盤',
         bet_amount: 0, valid_bet: 0,
         member_result: 0, agent_result: 0, super_agent_result: 0,
         shareholder_result: 0, big_shareholder_result: 0,

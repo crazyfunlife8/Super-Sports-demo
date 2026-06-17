@@ -120,13 +120,8 @@ window.dataSvcLive = {
       .neq('status', 'completed')
       .lte('commence_time', in24h)
       .order('commence_time');
-    if (error) { console.error('loadMatches:', error); return MOCK_MATCHES_LIVE; }
-    if (!data || data.length === 0) return MOCK_MATCHES_LIVE;
-    /* 若 Supabase 資料完全沒有賠率（API 尚未釋出線）則使用 mock */
-    var hasOdds = data.some(function(m) {
-      return (m.spread && m.spread.home_odds > 0) || (m.moneyline && m.moneyline.home_odds > 0);
-    });
-    return hasOdds ? data : MOCK_MATCHES_LIVE;
+    if (error) { console.error('loadMatches:', error); return []; }
+    return data || [];
   },
 
   async loadTickets() {

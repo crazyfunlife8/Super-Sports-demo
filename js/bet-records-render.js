@@ -74,14 +74,20 @@ function brLevelCells(r) {
 }
 
 /* 交易內容欄（還原原站完整格式） */
-function brBuildContent(r) {
+function brBuildContent(r, isEdit) {
   if (!r.away_team && !r.home_team) {
-    return `<td style="text-align:left;white-space:nowrap"><div>（未設定賽事）</div></td>`;
+    const inner = isEdit
+      ? `<span class="br-match-cell text-muted" data-record-id="${r.id}" style="cursor:pointer;text-decoration:underline dotted">＋ 設定賽事</span>`
+      : `（未設定賽事）`;
+    return `<td style="text-align:left;white-space:nowrap"><div>${inner}</div></td>`;
   }
 
   const prefix  = BR_SPORT_PREFIX[r.sport] || r.sport || '';
   const session = r.match_session || '全場早餐';
-  const line1   = `${prefix}-${session}-${r.bet_type || ''}`;
+  const editBtn = isEdit
+    ? ` <span class="br-match-cell" data-record-id="${r.id}" style="cursor:pointer;color:#888;font-size:11px">[編輯]</span>`
+    : '';
+  const line1   = `${prefix}-${session}-${r.bet_type || ''}${editBtn}`;
 
   const asHtml = r.away_score !== null && r.away_score !== undefined
     ? `[<span style="color:#23ba1e">${r.away_score}</span>]` : '';
@@ -140,7 +146,7 @@ function brDataRow(r, isEdit) {
   return `<tr data-record-id="${r.id}">
     <td style="text-align:center">${brFmtDatetime(r.created_at)}${deleteBtn}</td>
     ${brTicketCell(r, isEdit)}
-    ${brBuildContent(r)}
+    ${brBuildContent(r, isEdit)}
     <td>${amtHtml}</td>
     <td>${brFmt(r.valid_bet !== undefined ? r.valid_bet : bet)}</td>
     ${brLevelCells(r)}
@@ -191,6 +197,189 @@ function brRenderTable(records, isEdit) {
 
   $('#betRecordsBody').html(html);
   brBindHandlers(isEdit);
+}
+
+/* ── 賽事設定 Modal ── */
+
+function brInitMatchModal() {
+  if ($('#brMatchEditModal').length) return;
+  $('body').append(`
+    <div class="modal fade" id="brMatchEditModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header py-2">
+            <h6 class="modal-title mb-0">設定賽事資料</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label fw-bold small">選擇賽事（點擊選取）</label>
+              <div class="btn-group btn-group-sm mb-1" id="brSportFilter">
+                <button class="btn btn-outline-secondary active" data-sport="">全部</button>
+                <button class="btn btn-outline-secondary" data-sport="baseball_mlb">美棒</button>
+                <button class="btn btn-outline-secondary" data-sport="baseball_cpbl">台棒</button>
+                <button class="btn btn-outline-secondary" data-sport="baseball_npb">日棒</button>
+              </div>
+              <div id="brMatchList" style="max-height:200px;overflow-y:auto;border:1px solid #dee2e6;border-radius:4px;font-size:13px"></div>
+            </div>
+            <div class="row g-2">
+              <div class="col-sm-6">
+                <label class="form-label small">場次</label>
+                <select class="form-select form-select-sm" id="brEditSession">
+                  <option>全場早餐</option><option>全場</option><option>半場</option>
+                </select>
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small">結果</label>
+                <select class="form-select form-select-sm" id="brEditOutcome">
+                  <option value="">（未派彩）</option>
+                  <option>全贏</option><option>全輸</option>
+                  <option>半贏</option><option>半輸</option><option>和局</option>
+                </select>
+              </div>
+              <div class="col-12">
+                <label class="form-label small">投注選擇</label>
+                <div id="brBetChoiceOptions" class="mb-1" style="display:none"></div>
+                <input class="form-control form-control-sm" id="brEditBetChoice" placeholder="選取賽事後自動產生，或手動填入">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small">客隊比分</label>
+                <input class="form-control form-control-sm" type="number" id="brEditAwayScore" placeholder="空白=未知">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small">主隊比分</label>
+                <input class="form-control form-control-sm" type="number" id="brEditHomeScore" placeholder="空白=未知">
+              </div>
+              <div class="col-sm-6">
+                <label class="form-label small">派彩時間</label>
+                <input class="form-control form-control-sm" id="brEditSettleTime" placeholder="例：2026-06-16 14:30">
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">取消</button>
+            <button type="button" class="btn btn-primary btn-sm" id="brMatchSaveBtn">儲存</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `);
+}
+
+var _brEditRecordId = null;
+var _brSelectedMatch = null;
+var _brAllMatches = [];
+
+const _brSportLabel = { baseball_mlb:'美棒', baseball_cpbl:'台棒', baseball_npb:'日棒' };
+const _brSportBadge = { baseball_mlb:'primary', baseball_cpbl:'success', baseball_npb:'danger' };
+
+function brRenderMatchList(sport) {
+  const list = sport ? _brAllMatches.filter(m => m.sport === sport) : _brAllMatches;
+  if (!list.length) { $('#brMatchList').html('<div class="p-2 text-muted">無資料</div>'); return; }
+  const rows = list.map(function (m) {
+    const time = m.commence_time ? m.commence_time.slice(0,16).replace('T',' ') : '';
+    const safe = JSON.stringify(m).replace(/'/g, '&#39;');
+    return `<div class="br-match-option px-2 py-1" data-match='${safe}'
+      style="cursor:pointer;border-bottom:1px solid #f0f0f0">
+      <span class="badge bg-${_brSportBadge[m.sport]||'secondary'} me-1">${_brSportLabel[m.sport]||m.sport}</span>
+      ${m.away_team} v ${m.home_team}(主)
+      <small class="text-muted ms-2">${time}</small>
+    </div>`;
+  }).join('');
+  $('#brMatchList').html(rows);
+}
+
+function brFmtChoice(line, bookOdds) {
+  if (line === '' || line == null) return '';
+  var s = String(line);
+  var o = Number(bookOdds);
+  if (o && o !== -100 && o !== 100) {
+    var vig = o > 0 ? o - 100 : o + 100;
+    s += (vig >= 0 ? '+' : '') + vig;
+  }
+  return s;
+}
+
+function brRenderBetChoiceOptions(m) {
+  var sp = m.spread       || {};
+  var ou = m.totals       || {};
+  var ml = m.moneyline    || {};
+  var oe = m.odd_even     || {};
+  var fi = m.first_inning || {};
+  var home = m.home_team, away = m.away_team;
+  var opts = [];
+
+  /* 全場讓分 */
+  if (sp.home_odds) opts.push({ group:'讓分', label: `${home}(主) ${brFmtChoice(sp.home_line, sp.home_book_odds)}@${sp.home_odds}` });
+  if (sp.away_odds) opts.push({ group:'讓分', label: `${away} ${brFmtChoice(sp.away_line, sp.away_book_odds)}@${sp.away_odds}` });
+  /* 全場大小 */
+  if (ou.over_odds)  opts.push({ group:'大小', label: `大 ${ou.line||''}@${ou.over_odds}` });
+  if (ou.under_odds) opts.push({ group:'大小', label: `小 ${ou.line||''}@${ou.under_odds}` });
+  /* 全場獨贏 */
+  if (ml.home_odds) opts.push({ group:'獨贏', label: `${home}(主)@${ml.home_odds}` });
+  if (ml.away_odds) opts.push({ group:'獨贏', label: `${away}@${ml.away_odds}` });
+  /* 單雙 */
+  if (oe.odd_odds)  opts.push({ group:'單雙', label: `單@${oe.odd_odds}` });
+  if (oe.even_odds) opts.push({ group:'單雙', label: `雙@${oe.even_odds}` });
+  /* 半場讓分 */
+  if (fi.home_odds) opts.push({ group:'半場讓分', label: `${home}(主) ${brFmtChoice(fi.home_line, fi.home_book_odds)}@${fi.home_odds}` });
+  if (fi.away_odds) opts.push({ group:'半場讓分', label: `${away} ${brFmtChoice(fi.away_line, fi.away_book_odds)}@${fi.away_odds}` });
+  /* 半場大小 */
+  if (fi.over_odds)  opts.push({ group:'半場大小', label: `大 ${fi.total_line||''}@${fi.over_odds}` });
+  if (fi.under_odds) opts.push({ group:'半場大小', label: `小 ${fi.total_line||''}@${fi.under_odds}` });
+  /* 半場獨贏 */
+  if (fi.ml_home_odds) opts.push({ group:'半場獨贏', label: `${home}(主)@${fi.ml_home_odds}` });
+  if (fi.ml_away_odds) opts.push({ group:'半場獨贏', label: `${away}@${fi.ml_away_odds}` });
+
+  if (!opts.length) { $('#brBetChoiceOptions').hide(); return; }
+
+  /* 依 group 分組渲染 */
+  var groups = {};
+  opts.forEach(function (o) {
+    if (!groups[o.group]) groups[o.group] = [];
+    var val = o.label.trim();
+    groups[o.group].push(`<button type="button" class="btn btn-sm btn-outline-secondary br-choice-btn me-1 mb-1" data-value="${val}">${val}</button>`);
+  });
+
+  var html = Object.keys(groups).map(function (g) {
+    return `<div class="mb-1"><small class="text-muted me-1">${g}：</small>${groups[g].join('')}</div>`;
+  }).join('');
+
+  $('#brBetChoiceOptions').html(html).show();
+}
+
+function brOpenMatchModal(recordId) {
+  brInitMatchModal();
+  _brEditRecordId  = recordId;
+  _brSelectedMatch = null;
+  $('#brSportFilter .btn').removeClass('active');
+  $('#brSportFilter .btn[data-sport=""]').addClass('active');
+
+  /* 載入賽事清單 */
+  $('#brMatchList').html('<div class="p-2 text-muted">載入中...</div>');
+  _supabase.from('matches')
+    .select('match_id,sport,away_team,home_team,commence_time,status,spread,totals,moneyline,odd_even,first_inning')
+    .in('sport', ['baseball_mlb','baseball_cpbl','baseball_npb'])
+    .order('commence_time', { ascending: false })
+    .limit(100)
+    .then(function ({ data }) {
+      _brAllMatches = data || [];
+      brRenderMatchList('');
+    });
+
+  /* 若已有資料，預填欄位 */
+  _supabase.from('bet_tickets').select('*').eq('id', recordId).maybeSingle()
+    .then(function ({ data: r }) {
+      if (!r) return;
+      $('#brEditSession').val(r.match_session || '全場早餐');
+      $('#brEditOutcome').val(r.outcome || '');
+      $('#brEditBetChoice').val(r.bet_choice || '');
+      $('#brEditAwayScore').val(r.away_score !== null ? r.away_score : '');
+      $('#brEditHomeScore').val(r.home_score !== null ? r.home_score : '');
+      $('#brEditSettleTime').val(r.settle_time || '');
+    });
+
+  new bootstrap.Modal(document.getElementById('brMatchEditModal')).show();
 }
 
 /* ── 編輯事件綁定 ── */
@@ -270,6 +459,68 @@ function brBindHandlers(isEdit) {
   $body.off('click.br', '.br-add-btn')
     .on('click.br', '.br-add-btn', function () {
       betRecordsDataSvc.createRecord().then(function () { betRecordsFn.Refresh(); });
+    });
+
+  /* 設定賽事：點擊內容格 */
+  $body.off('click.br', '.br-match-cell')
+    .on('click.br', '.br-match-cell', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+      brOpenMatchModal($(this).data('record-id'));
+    });
+
+  /* Modal：運動分類過濾 */
+  $(document).off('click.br', '#brSportFilter .btn')
+    .on('click.br', '#brSportFilter .btn', function () {
+      $('#brSportFilter .btn').removeClass('active');
+      $(this).addClass('active');
+      brRenderMatchList($(this).data('sport'));
+    });
+
+  /* Modal：選取賽事 → 生成投注選項 */
+  $(document).off('click.br', '.br-match-option')
+    .on('click.br', '.br-match-option', function () {
+      $('.br-match-option').css({ background: '' });
+      $(this).css({ background: '#dbeafe' });
+      _brSelectedMatch = JSON.parse($(this).attr('data-match'));
+      brRenderBetChoiceOptions(_brSelectedMatch);
+    });
+
+  /* Modal：點選投注選項 → 填入輸入框 */
+  $(document).off('click.br', '.br-choice-btn')
+    .on('click.br', '.br-choice-btn', function () {
+      $('.br-choice-btn').removeClass('btn-primary').addClass('btn-outline-secondary');
+      $(this).removeClass('btn-outline-secondary').addClass('btn-primary');
+      $('#brEditBetChoice').val($(this).data('value'));
+    });
+
+  /* Modal：儲存 */
+  $(document).off('click.br', '#brMatchSaveBtn')
+    .on('click.br', '#brMatchSaveBtn', function () {
+      if (!_brEditRecordId) return;
+
+      const fields = {
+        match_session: $('#brEditSession').val(),
+        outcome:       $('#brEditOutcome').val() || null,
+        bet_choice:    $('#brEditBetChoice').val().trim() || null,
+        away_score:    $('#brEditAwayScore').val() !== '' ? Number($('#brEditAwayScore').val()) : null,
+        home_score:    $('#brEditHomeScore').val() !== '' ? Number($('#brEditHomeScore').val()) : null,
+        settle_time:   $('#brEditSettleTime').val().trim() || null,
+      };
+
+      if (_brSelectedMatch) {
+        fields.sport        = _brSelectedMatch.sport;
+        fields.away_team    = _brSelectedMatch.away_team;
+        fields.home_team    = _brSelectedMatch.home_team;
+        fields.commence_time = _brSelectedMatch.commence_time
+          ? _brSelectedMatch.commence_time.slice(0,16).replace('T',' ')
+          : null;
+      }
+
+      betRecordsDataSvc.saveRecord(_brEditRecordId, fields).then(function () {
+        bootstrap.Modal.getInstance(document.getElementById('brMatchEditModal')).hide();
+        betRecordsFn.Refresh();
+      });
     });
 }
 

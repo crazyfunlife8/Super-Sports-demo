@@ -25,25 +25,55 @@ async function sbGet(targetUrl) {
   return res.json();
 }
 
-/* ── 台彩結果 API（直接 POST，api3rd 可能不封鎖） ── */
+/* ── 解析台彩結算回應 ── */
+function _parseSettleJson(json) {
+  const events = json?.content?.data?.settledevents ?? [];
+  if (!events.length) return null;
+  const ev = events[0];
+  return {
+    full_home_score: Number(ev.homescoreline) || 0,
+    full_away_score: Number(ev.awayscoreline) || 0,
+    status:    'completed',
+    synced_at: new Date().toISOString(),
+  };
+}
+
+/* ── 台彩結果 API：先直接 POST，失敗改用 ScrapingBee ── */
 async function fetchSettledScore(gameDate, listcode) {
+  const body = JSON.stringify({ type: 'settledEventsByAlias', id: `${gameDate}/${listcode}`, language: 'ZH' });
+
+  /* 嘗試直接 POST（api3rd 可能不封鎖） */
   try {
     const res = await fetch(SETTLE_URL, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ type: 'settledEventsByAlias', id: `${gameDate}/${listcode}`, language: 'ZH' }),
+      body,
+    });
+    if (res.ok) {
+      const json = await res.json();
+      const parsed = _parseSettleJson(json);
+      if (parsed) return parsed;
+    }
+  } catch { /* fall through to ScrapingBee */ }
+
+  /* 備援：透過 ScrapingBee POST（datacenter 被封鎖時） */
+  try {
+    const url = new URL(SCRAPINGBEE);
+    url.searchParams.set('api_key',       process.env.SCRAPINGBEE_API_KEY);
+    url.searchParams.set('url',           SETTLE_URL);
+    url.searchParams.set('render_js',     'false');
+    url.searchParams.set('premium_proxy', 'true');
+    /* 自訂請求 header */
+    url.searchParams.set('headers', JSON.stringify({ 'Content-Type': 'application/json' }));
+
+    const res = await fetch(url.toString(), {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body:    `post_data=${encodeURIComponent(body)}`,
     });
     if (!res.ok) return null;
     const json = await res.json();
-    const events = json?.content?.data?.settledevents ?? [];
-    if (!events.length) return null;
-    const ev = events[0];
-    return {
-      full_home_score: Number(ev.homescoreline) || 0,
-      full_away_score: Number(ev.awayscoreline) || 0,
-      status:    'completed',
-      synced_at: new Date().toISOString(),
-    };
+    return _parseSettleJson(json);
   } catch { return null; }
 }
 
