@@ -12337,7 +12337,7 @@ nav::after {
 }
 
 .bg-light {
-    background: url(../images/header-bg.jpg) left top no-repeat #fff !important;
+    /* background: url(../images/header-bg.jpg) left top no-repeat #fff !important; */
     background-size: contain !important
 }
 

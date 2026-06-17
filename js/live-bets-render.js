@@ -4,8 +4,14 @@ window.billfnLive = window.billfnLive || {};
 
 function _fmtTime(t) {
   if (!t) return '';
-  if (typeof t === 'string' && t.includes('T')) return t.slice(0, 16).replace('T', ' ');
-  return t;
+  var d = new Date(t);
+  if (isNaN(d.getTime())) return t;
+  var tw = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  var mo = String(tw.getUTCMonth() + 1).padStart(2, '0');
+  var dy = String(tw.getUTCDate()).padStart(2, '0');
+  var hr = String(tw.getUTCHours()).padStart(2, '0');
+  var mn = String(tw.getUTCMinutes()).padStart(2, '0');
+  return mo + '-' + dy + ' ' + hr + ':' + mn;
 }
 
 /* 賠率顯示：取小數點後兩位，0 或無效值回傳空字串 */

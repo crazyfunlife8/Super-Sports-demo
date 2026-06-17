@@ -4,8 +4,14 @@ window.billfnHistory = window.billfnHistory || {};
 
 function _fmtTime(t) {
   if (!t) return '';
-  if (typeof t === 'string' && t.includes('T')) return t.slice(0, 16).replace('T', ' ');
-  return t;
+  var d = new Date(t);
+  if (isNaN(d.getTime())) return t;
+  var tw = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  var mo = String(tw.getUTCMonth() + 1).padStart(2, '0');
+  var dy = String(tw.getUTCDate()).padStart(2, '0');
+  var hr = String(tw.getUTCHours()).padStart(2, '0');
+  var mn = String(tw.getUTCMinutes()).padStart(2, '0');
+  return mo + '-' + dy + ' ' + hr + ':' + mn;
 }
 
 /* 賠率顯示：取小數點後兩位，0 或無效值回傳空字串 */
@@ -171,7 +177,7 @@ function buildHistRows(match, tickets, isEdit) {
         <div>${match.away_team}</div>
         <div>${match.home_team}<span class="text-danger">[主]</span></div>
       </div></td>
-      ${histScoreCell(homeScore, awayScore)}
+      ${histScoreCell(awayScore, homeScore)}
       ${histValCell('&nbsp;' + fmtHandicap(rowSp.home_line, rowSp.home_book_odds), '&nbsp;' + fmtHandicap(rowSp.away_line, rowSp.away_book_odds))}
       ${histOddsCell(avgOdds(rowSp.home_odds, rowSp.away_odds), avgOdds(rowSp.home_odds, rowSp.away_odds))}
       ${histCountCell(hdpHomeCnt, hdpAwayCnt)}

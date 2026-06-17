@@ -2,6 +2,18 @@
 
 window.betRecordsFn = window.betRecordsFn || {};
 
+function _fmtTimeTW(t) {
+  if (!t) return '';
+  var d = new Date(t);
+  if (isNaN(d.getTime())) return t;
+  var tw = new Date(d.getTime() + 8 * 60 * 60 * 1000);
+  var mo = String(tw.getUTCMonth() + 1).padStart(2, '0');
+  var dy = String(tw.getUTCDate()).padStart(2, '0');
+  var hr = String(tw.getUTCHours()).padStart(2, '0');
+  var mn = String(tw.getUTCMinutes()).padStart(2, '0');
+  return mo + '-' + dy + ' ' + hr + ':' + mn;
+}
+
 /* ── 常數 ── */
 
 const BR_SPORT_PREFIX = {
@@ -277,7 +289,7 @@ function brRenderMatchList(sport) {
   const list = sport ? _brAllMatches.filter(m => m.sport === sport) : _brAllMatches;
   if (!list.length) { $('#brMatchList').html('<div class="p-2 text-muted">無資料</div>'); return; }
   const rows = list.map(function (m) {
-    const time = m.commence_time ? m.commence_time.slice(0,16).replace('T',' ') : '';
+    const time = m.commence_time ? _fmtTimeTW(m.commence_time) : '';
     const safe = JSON.stringify(m).replace(/'/g, '&#39;');
     return `<div class="br-match-option px-2 py-1" data-match='${safe}'
       style="cursor:pointer;border-bottom:1px solid #f0f0f0">
@@ -513,7 +525,7 @@ function brBindHandlers(isEdit) {
         fields.away_team    = _brSelectedMatch.away_team;
         fields.home_team    = _brSelectedMatch.home_team;
         fields.commence_time = _brSelectedMatch.commence_time
-          ? _brSelectedMatch.commence_time.slice(0,16).replace('T',' ')
+          ? _fmtTimeTW(_brSelectedMatch.commence_time)
           : null;
       }
 
