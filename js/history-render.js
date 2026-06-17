@@ -102,13 +102,28 @@ function histAmtCell(a1, a2) {
     <div class="justify-content-center rules"><div><div>${a1}</div><div>${a2}</div></div></div></td>`;
 }
 
-function histScoreCell(home, away) {
+function histScoreCell(home, away, sm) {
   var h = (home !== null && home !== undefined) ? home : '';
   var a = (away !== null && away !== undefined) ? away : '';
+
+  var tags = [];
+  if (sm) {
+    var spHad = sm.sp_hadvalue;
+    if (spHad === 'H') tags.push('<span class="badge bg-primary" style="font-size:9px;padding:1px 3px">讓主</span>');
+    else if (spHad === 'A') tags.push('<span class="badge bg-primary" style="font-size:9px;padding:1px 3px">讓客</span>');
+    var ouW = sm.ou_winner || '';
+    if (ouW.startsWith('大')) tags.push('<span class="badge bg-warning text-dark" style="font-size:9px;padding:1px 3px">大</span>');
+    else if (ouW.startsWith('小')) tags.push('<span class="badge bg-warning text-dark" style="font-size:9px;padding:1px 3px">小</span>');
+    var oeW = sm.oe_winner || '';
+    if (oeW === '單' || oeW === '雙') tags.push('<span class="badge bg-secondary" style="font-size:9px;padding:1px 3px">' + oeW + '</span>');
+  }
+  var resultHtml = tags.length ? '<div style="margin-top:2px;white-space:nowrap">' + tags.join('&nbsp;') + '</div>' : '';
+
   return `<td style="text-align:center!important;color:red;border-left:1px dotted rgb(206,212,218)">
     <div><div>
       <div style="font-size:12pt!important">${h}</div>
       <div style="font-size:12pt!important">${a}</div>
+      ${resultHtml}
     </div></div></td>`;
 }
 
@@ -116,6 +131,7 @@ function histScoreCell(home, away) {
 
 function buildHistRows(match, tickets, isEdit) {
   var id  = match.match_id;
+  var sm  = match.settled_markets || null;
   var t   = tickets[id] || {
     handicap:       { home: { count:0, amount:0 }, away:  { count:0, amount:0 } },
     totals:         { over: { count:0, amount:0 }, under: { count:0, amount:0 } },
@@ -177,7 +193,7 @@ function buildHistRows(match, tickets, isEdit) {
         <div>${match.away_team}</div>
         <div>${match.home_team}<span class="text-danger">[主]</span></div>
       </div></td>
-      ${histScoreCell(awayScore, homeScore)}
+      ${histScoreCell(awayScore, homeScore, isHalf ? null : sm)}
       ${histValCell('&nbsp;' + fmtHandicap(rowSp.home_line, rowSp.home_book_odds), '&nbsp;' + fmtHandicap(rowSp.away_line, rowSp.away_book_odds))}
       ${histOddsCell(avgOdds(rowSp.home_odds, rowSp.away_odds), avgOdds(rowSp.home_odds, rowSp.away_odds))}
       ${histCountCell(hdpHomeCnt, hdpAwayCnt)}
