@@ -56,25 +56,31 @@ async function fetchSettledScore(gameDate, listcode) {
     }
   } catch { /* fall through to ScrapingBee */ }
 
-  /* 備援：透過 ScrapingBee POST（datacenter 被封鎖時） */
+  /* 備援：ScrapingBee 直接轉發 JSON body（POST to ScrapingBee → 它 forward 給 target） */
   try {
     const url = new URL(SCRAPINGBEE);
     url.searchParams.set('api_key',       process.env.SCRAPINGBEE_API_KEY);
     url.searchParams.set('url',           SETTLE_URL);
     url.searchParams.set('render_js',     'false');
     url.searchParams.set('premium_proxy', 'true');
-    /* 自訂請求 header */
-    url.searchParams.set('headers', JSON.stringify({ 'Content-Type': 'application/json' }));
 
     const res = await fetch(url.toString(), {
       method:  'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body:    `post_data=${encodeURIComponent(body)}`,
+      headers: { 'Content-Type': 'application/json' },
+      body,   /* ScrapingBee 會把此 JSON body 原封不動 forward 給 target */
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      console.log(`  ⚠️ ScrapingBee settle ${res.status}`);
+      return null;
+    }
     const json = await res.json();
-    return _parseSettleJson(json);
-  } catch { return null; }
+    const parsed = _parseSettleJson(json);
+    if (!parsed) console.log(`  ⚠️ settle response 無結算資料`);
+    return parsed;
+  } catch (e) {
+    console.log(`  ⚠️ ScrapingBee settle error: ${e.message}`);
+    return null;
+  }
 }
 
 /* ── 賠率工具 ── */
@@ -187,7 +193,8 @@ async function main() {
     .in('sport', ['baseball_npb','baseball_cpbl'])
     .neq('status','completed')
     .lt('commence_time', cutoff)
-    .not('listcode','is',null);
+    .not('listcode','is',null)
+    .neq('listcode','');
 
   if (pendingErr) throw new Error(`query pending: ${pendingErr.message}`);
   console.log(`🔍 待補比分: ${pending?.length ?? 0} 場`);

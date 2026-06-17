@@ -157,7 +157,7 @@
   const todayTWMidnightUTC = new Date(twMidnight - 8 * 60 * 60 * 1000).toISOString();
 
   const pending = await sbGet(
-    `/matches?sport=in.(baseball_npb,baseball_cpbl)&status=neq.completed&commence_time=lt.${todayTWMidnightUTC}&listcode=not.is.null&select=match_id,listcode,commence_time`
+    `/matches?sport=in.(baseball_npb,baseball_cpbl)&status=neq.completed&commence_time=lt.${todayTWMidnightUTC}&listcode=not.is.null&listcode=neq.&select=match_id,listcode,commence_time`
   );
   console.log(`🔍 待補比分: ${pending.length} 場`);
 

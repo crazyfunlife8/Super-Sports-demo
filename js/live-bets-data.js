@@ -112,12 +112,19 @@ function _liveTicketsToNested(rows) {
 window.dataSvcLive = {
 
   async loadMatches() {
+    /* 台灣今天午夜 UTC（只顯示今日起的場次，避免昨天未結算的殘留） */
+    const twNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
+    const twMidnightUTC = new Date(
+      Date.UTC(twNow.getUTCFullYear(), twNow.getUTCMonth(), twNow.getUTCDate()) - 8 * 60 * 60 * 1000
+    ).toISOString();
     const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
     const { data, error } = await _supabase
       .from('matches')
       .select('*')
       .in('sport', ['baseball_mlb', 'baseball_cpbl', 'baseball_npb'])
       .neq('status', 'completed')
+      .gte('commence_time', twMidnightUTC)
       .lte('commence_time', in24h)
       .order('commence_time');
     if (error) { console.error('loadMatches:', error); return []; }
