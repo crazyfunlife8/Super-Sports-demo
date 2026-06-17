@@ -205,7 +205,26 @@ async function sbGet(targetUrl: string, sbKey: string): Promise<unknown> {
   url.searchParams.set('premium_proxy', 'true');
   url.searchParams.set('block_resources','false');
   const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`ScrapingBee ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) throw new Error(`ScrapingBee GET ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  return res.json();
+}
+
+async function sbPost(targetUrl: string, body: Record<string, unknown>, sbKey: string): Promise<unknown> {
+  const url = new URL(SCRAPINGBEE);
+  url.searchParams.set('api_key',        sbKey);
+  url.searchParams.set('url',            targetUrl);
+  url.searchParams.set('render_js',      'false');
+  url.searchParams.set('premium_proxy',  'true');
+  url.searchParams.set('block_resources','false');
+  const res = await fetch(url.toString(), {
+    method:  'POST',
+    headers: {
+      'Content-Type':     'application/json',
+      'Spb-Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`ScrapingBee POST ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return res.json();
 }
 
@@ -365,13 +384,7 @@ Deno.serve(async (req: Request) => {
 
         for (const m of pendingMatches) {
           try {
-            const r = await fetch(TW_SETTLED_API, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'settledMarkets', id: m.match_id, language: 'ZH' }),
-            });
-            if (!r.ok) { console.warn(`  ⚠️ HTTP ${r.status} for ${m.match_id}`); continue; }
-            const json    = await r.json() as Record<string, unknown>;
+            const json    = await sbPost(TW_SETTLED_API, { type: 'settledMarkets', id: m.match_id, language: 'ZH' }, sbKey) as Record<string, unknown>;
             const content = (json?.content as Record<string, unknown>) ?? {};
             if (content?.errorType) continue; // 比賽尚未結束，跳過
 
