@@ -73,7 +73,7 @@ function brParseBetChoice(s) {
 /* ── 欄位建構 ── */
 
 /* 各層級結果欄（從 record 讀取已儲存的值） */
-function brLevelCells(r) {
+function brLevelCells(r, isEdit) {
   return BR_LEVELS.map(function (lv) {
     const val = Number(r[lv.key]) || 0;
     const rebate = lv.simple
@@ -81,7 +81,11 @@ function brLevelCells(r) {
       : `<td class="w${lv.wIdx}" data-v="${lv.wIdx}" style="display:none">` +
         `<span class="w${lv.wIdx}s0">0</span><span class="w${lv.wIdx}s1">0</span></td>`;
     const dvAttr = lv.simple ? '' : ` data-v="${lv.wIdx}"`;
-    return rebate + `<td${dvAttr}>${brResultSpan(val)}</td>`;
+    const color  = val >= 0 ? 'green' : '#dc3545';
+    const inner  = isEdit && r.id
+      ? `<span class="br-level-edit" data-record-id="${r.id}" data-field="${lv.key}" style="cursor:pointer;color:${color}">${brFmt(val)}</span>`
+      : brResultSpan(val);
+    return rebate + `<td${dvAttr}>${inner}</td>`;
   }).join('');
 }
 
@@ -161,7 +165,7 @@ function brDataRow(r, isEdit) {
     ${brBuildContent(r, isEdit)}
     <td>${amtHtml}</td>
     <td>${brFmt(r.valid_bet !== undefined ? r.valid_bet : bet)}</td>
-    ${brLevelCells(r)}
+    ${brLevelCells(r, isEdit)}
     <td class="w99" style="display:none">${r.rate_scheme ? `<div class="row p-2" style="margin:0;background-color:#c4e3cb;width:270px"><div class="col-2">成數:</div><div class="col-10 p-0">${r.rate_scheme}</div></div>` : ''}</td>
     <td class="w99" style="display:none"></td>
   </tr>`;
@@ -442,16 +446,32 @@ function brBindHandlers(isEdit) {
       const save = function () {
         const amt = Math.round(Number($inp.val()) || 0);
         betRecordsDataSvc.saveRecord(id, {
-          bet_amount:             amt,
-          valid_bet:              amt,
-          member_result:          Math.round(amt * 0.99),
-          agent_result:           amt,
-          super_agent_result:     Math.round(amt * 0.05),
-          shareholder_result:     Math.round(amt * 0.05),
-          big_shareholder_result: Math.round(amt * 0.05),
-          director_result:        Math.round(amt * 0.05),
-          big_director_result:    Math.round(amt * 0.03)
+          bet_amount: amt,
+          valid_bet:  amt,
         }).then(function () { betRecordsFn.Refresh(); });
+      };
+      $inp.on('keydown', function (e) {
+        if (e.key === 'Enter')  { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { betRecordsFn.Refresh(); }
+      }).on('blur', save);
+    });
+
+  /* 各層級結果 inline */
+  $body.off('click.br', '.br-level-edit')
+    .on('click.br', '.br-level-edit', function () {
+      const $span = $(this);
+      if ($span.find('input').length) return;
+      const id    = $span.data('record-id');
+      const field = $span.data('field');
+      const raw   = $span.text().trim().replace(/,/g, '');
+      const $inp  = $('<input class="form-control form-control-sm" type="number" />')
+        .val(raw).css({ width: '90px' });
+      $span.html($inp);
+      $inp.focus().select();
+      const save = function () {
+        const val = Math.round(Number($inp.val()) || 0);
+        betRecordsDataSvc.saveRecord(id, { [field]: val })
+          .then(function () { betRecordsFn.Refresh(); });
       };
       $inp.on('keydown', function (e) {
         if (e.key === 'Enter')  { e.preventDefault(); save(); }
