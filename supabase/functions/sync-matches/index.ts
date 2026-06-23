@@ -269,7 +269,9 @@ function parseTWGame(game: Record<string, unknown>) {
   const sp = pickMainMarket(ms, 358), spCs = (sp?.cs as Record<string, unknown>[]) || [], spLine = sp ? String(sp.mv ?? '') : '';
   const ou = pickMainMarket(ms, 360), ouCs = (ou?.cs as Record<string, unknown>[]) || [], ouLine = ou ? String(ou.mv ?? '') : '';
   const ml = pickMainMarket(ms, 354), mlCs = (ml?.cs as Record<string, unknown>[]) || [];
-  const oe = pickMainMarket(ms, 366), oeCs = (oe?.cs as Record<string, unknown>[]) || [];
+  let oe: Record<string, unknown> | null | undefined = pickMainMarket(ms, 366);
+  if (!oe) oe = ms.find(m => String(m.name || '').includes('單雙')) ?? null;
+  const oeCs = (oe?.cs as Record<string, unknown>[]) || [];
   const fim = pickMainMarket(ms, 376), fimCs = (fim?.cs as Record<string, unknown>[]) || [];
   const fio = pickMainMarket(ms, 378), fioCs = (fio?.cs as Record<string, unknown>[]) || [], fioLine = fio ? String(fio.mv ?? '') : '';
 
@@ -286,7 +288,7 @@ function parseTWGame(game: Record<string, unknown>) {
     spread:      { home_line: spLine, away_line: twAwayLine(spLine), home_odds: oddsBy(spCs, 'H'), away_odds: oddsBy(spCs, 'A'), home_book_odds: null, away_book_odds: null },
     totals:      { line: ouLine, over_odds: oddsBy(ouCs, 'A'), under_odds: oddsBy(ouCs, 'H') },
     moneyline:   { home_odds: oddsBy(mlCs, 'H'), away_odds: oddsBy(mlCs, 'A') },
-    odd_even:    { odd_odds: oddsByName(oeCs, '單'), even_odds: oddsByName(oeCs, '雙') },
+    odd_even:    { odd_odds: oddsByName(oeCs, '單') || oddsBy(oeCs, 'A'), even_odds: oddsByName(oeCs, '雙') || oddsBy(oeCs, 'H') },
     first_inning: {
       home_line: '', away_line: '', home_odds: 0, away_odds: 0, home_book_odds: null, away_book_odds: null,
       total_line: fioLine, over_odds: oddsBy(fioCs, 'A'), under_odds: oddsBy(fioCs, 'H'),

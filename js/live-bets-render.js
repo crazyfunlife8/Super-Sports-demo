@@ -130,7 +130,7 @@ function buildMatchRow(match, tickets, isEdit) {
     <td status="0"><div><div>${fmtOdds(ml.home_odds)}</div><div>${fmtOdds(ml.away_odds)}</div></div></td>
     <td status="0"><div><div>${mlHome}</div><div>${mlAway}</div></div></td>
     <td status="0"><div><div>單</div><div>雙</div></div></td>
-    <td status="0"><div><div>${avgOdds(oe.odd_odds, oe.even_odds)}</div><div>${avgOdds(oe.odd_odds, oe.even_odds)}</div></div></td>
+    <td status="0"><div><div>${fmtOdds(oe.odd_odds)}</div><div>${fmtOdds(oe.even_odds)}</div></div></td>
     <td status="0"><div><div>${oeOdd}</div><div>${oeEven}</div></div></td>
     <td class="" status="0">
       <div class="d-flex justify-content-center rules">
