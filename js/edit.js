@@ -162,16 +162,20 @@ window.editSvc = {
 
     /* ── 立刻同步 API ── */
     $('#btnSyncApi').on('click', async function () {
-      if (!confirm('立刻同步所有賽事？\n・MLB：SportsGameOdds API\n・CPBL/NPB：台彩賠率 + Sportradar 比分\n・CPBL/NPB：賽後盤口結果（settledMarkets）')) return;
+      if (!confirm('立刻同步今日所有賽事？\n・MLB / CPBL / NPB：ag.amg888.net')) return;
+      const $btn = $(this);
+      $btn.prop('disabled', true).html('<i class="bi bi-hourglass-split me-1"></i>同步中...');
       try {
-        const { data, error } = await _supabase.functions.invoke('sync-matches');
+        const { data, error } = await _supabase.functions.invoke('sync-amg');
         if (error) throw new Error(error.message);
         const now = new Date().toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
         $('#lastSyncTime').text('上次同步：' + now);
-        alert(`同步完成（${now}）\nMLB：${data?.mlb ?? 0} 筆\nCPBL/NPB 賠率：${data?.cpbl_npb ?? 0} 筆\nCPBL/NPB 比分+盤口：${data?.settled ?? 0} 筆`);
+        alert(`同步完成（${now}）\n共 ${data?.total ?? 0} 場\n${(data?.log ?? []).join('\n')}`);
         _refreshCurrentPage();
       } catch (e) {
-        alert('同步失敗：' + e.message + '\n\n請確認 Supabase Edge Function「sync-matches」已部署，\n且環境變數 SPORTSGAMEODDS_API_KEY、SCRAPINGBEE_API_KEY 已設定。');
+        alert('同步失敗：' + e.message);
+      } finally {
+        $btn.prop('disabled', false).html('<i class="bi bi-arrow-repeat me-1"></i>立刻同步 API');
       }
     });
 

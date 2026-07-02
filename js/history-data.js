@@ -150,7 +150,7 @@ window.dataSvcHistory = {
       .lt('commence_time', now)
       .not('full_home_score', 'is', null)
       .not('full_away_score', 'is', null)
-      .order('commence_time', { ascending: false });
+      .order('commence_time', { ascending: true });
     if (error) { console.error('loadMatches:', error); return HIST_MATCHES; }
     return (data && data.length > 0) ? data : HIST_MATCHES;
   },

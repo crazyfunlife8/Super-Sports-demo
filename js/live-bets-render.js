@@ -121,22 +121,22 @@ function buildMatchRow(match, tickets, isEdit) {
         <div>${match.home_team}<span class="text-danger">[主]</span></div>
       </div>
     </td>
-    <td status="0"><div><div>&nbsp;${fmtHandicap(sp.home_line, sp.home_book_odds)}</div><div>&nbsp;${fmtHandicap(sp.away_line, sp.away_book_odds)}</div></div></td>
-    <td status="0"><div><div>${avgOdds(sp.home_odds, sp.away_odds)}</div><div>${avgOdds(sp.home_odds, sp.away_odds)}</div></div></td>
-    <td status="0"><div><div>${hdpHome}</div><div>${hdpAway}</div></div></td>
+    <td status="0"><div><div>&nbsp;${sp.away_line || ''}</div><div>&nbsp;${sp.home_line || ''}</div></div></td>
+    <td status="0"><div><div>${fmtOdds(sp.away_odds)}</div><div>${fmtOdds(sp.home_odds)}</div></div></td>
+    <td status="0"><div><div>${hdpAway}</div><div>${hdpHome}</div></div></td>
     <td status="0"><div><div>&nbsp;${tt.line}</div><div>小</div></div></td>
-    <td status="0"><div><div>${avgOdds(tt.over_odds, tt.under_odds)}</div><div>${avgOdds(tt.over_odds, tt.under_odds)}</div></div></td>
+    <td status="0"><div><div>${fmtOdds(tt.over_odds)}</div><div>${fmtOdds(tt.under_odds)}</div></div></td>
     <td status="0"><div><div>${ouOver}</div><div>${ouUnder}</div></div></td>
-    <td status="0"><div><div>${fmtOdds(ml.home_odds)}</div><div>${fmtOdds(ml.away_odds)}</div></div></td>
-    <td status="0"><div><div>${mlHome}</div><div>${mlAway}</div></div></td>
+    <td status="0"><div><div>${fmtOdds(ml.away_odds)}</div><div>${fmtOdds(ml.home_odds)}</div></div></td>
+    <td status="0"><div><div>${mlAway}</div><div>${mlHome}</div></div></td>
     <td status="0"><div><div>單</div><div>雙</div></div></td>
     <td status="0"><div><div>${fmtOdds(oe.odd_odds)}</div><div>${fmtOdds(oe.even_odds)}</div></div></td>
     <td status="0"><div><div>${oeOdd}</div><div>${oeEven}</div></div></td>
     <td class="" status="0">
       <div class="d-flex justify-content-center rules">
-        <div><div>&nbsp;${fmtHandicap(fi.home_line, null)}</div><div>&nbsp;${fmtHandicap(fi.away_line, null)}</div></div>
-        <div><div>${fmtOdds(fi.home_odds)}</div><div>${fmtOdds(fi.away_odds)}</div></div>
-        <div><div>${fiHome}</div><div>${fiAway}</div></div>
+        <div><div>&nbsp;${fi.away_line || ''}</div><div>&nbsp;${fi.home_line || ''}</div></div>
+        <div><div>${fmtOdds(fi.away_odds)}</div><div>${fmtOdds(fi.home_odds)}</div></div>
+        <div><div>${fiAway}</div><div>${fiHome}</div></div>
       </div>
     </td>
   </tr>`;

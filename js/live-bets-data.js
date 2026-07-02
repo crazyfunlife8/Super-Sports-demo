@@ -126,7 +126,7 @@ window.dataSvcLive = {
       .neq('status', 'completed')
       .gte('commence_time', twMidnightUTC)
       .lte('commence_time', in24h)
-      .order('commence_time');
+      .order('commence_time', { ascending: true });
     if (error) { console.error('loadMatches:', error); return []; }
     return data || [];
   },
