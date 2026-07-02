@@ -59,7 +59,12 @@ function buildChampRow(match, tickets, isEdit) {
     : '';
 
   return `<tr data-match-id="${id}">
-    <th style="width:90px;white-space:nowrap">${id.slice(0,8)}${delBtn}</th>
+    <th style="width:90px;white-space:nowrap">
+      ${isEdit
+        ? `<span class="edit-champ-id" data-match-id="${id}" style="cursor:pointer;border-bottom:1px dashed #aaa;word-break:break-all">${id}</span>`
+        : id.slice(0, 8)}
+      ${delBtn}
+    </th>
     <th style="width:90px">${champCell(match.commence_time, id, 'commence_time', '', isEdit)}</th>
     <td style="width:120px;text-align:left!important;white-space:nowrap">
       <div>
@@ -192,6 +197,11 @@ var editSvcChampion = {
         dataSvcChampion.deleteMatch(matchId).then(function () { billfnChampion.Refresh(); });
       });
 
+    $c.off('click.edit-champ-id', '.edit-champ-id')
+      .on('click.edit-champ-id', '.edit-champ-id', function () {
+        self.startIdEdit($(this));
+      });
+
     $c.off('click.edit-champ', '.edit-champ-cell')
       .on('click.edit-champ', '.edit-champ-cell', function () {
         self.startCellEdit($(this));
@@ -201,6 +211,48 @@ var editSvcChampion = {
       .on('click.edit-ticket', '.edit-champ-ticket', function () {
         self.startTicketEdit($(this));
       });
+  },
+
+  startIdEdit: function ($span) {
+    if ($span.find('input').length) return;
+    var oldId = $span.data('match-id');
+
+    var $input = $('<input class="form-control form-control-sm d-inline-block" />')
+      .val(oldId)
+      .css({ width: '110px' });
+    $span.html($input);
+    $input.focus().select();
+
+    var saved = false;
+    function save() {
+      if (saved) return;
+      var newId = $input.val().trim();
+      if (!newId || newId === oldId) { billfnChampion.Refresh(); return; }
+
+      var duplicate = _champMatches.find(function (m) {
+        return m.match_id === newId && m.match_id !== oldId;
+      });
+      if (duplicate) {
+        saved = true;
+        alert('編號「' + newId + '」已被其他賽事使用，請更換編號。');
+        billfnChampion.Refresh();
+        return;
+      }
+
+      saved = true;
+      dataSvcChampion.updateMatchId(oldId, newId)
+        .then(function (err) {
+          if (err) { alert('更新編號失敗：' + err.message); }
+          billfnChampion.Refresh();
+        });
+    }
+
+    $input
+      .on('keydown', function (e) {
+        if (e.key === 'Enter')  { e.preventDefault(); save(); }
+        if (e.key === 'Escape') { billfnChampion.Refresh(); }
+      })
+      .on('blur', save);
   },
 
   startCellEdit: function ($span) {

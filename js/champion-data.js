@@ -101,5 +101,14 @@ window.dataSvcChampion = {
       .update({ [col]: value, updated_at: new Date().toISOString() })
       .eq('match_id', matchId);
     if (error) console.error('champion updateMatchField:', error);
+  },
+
+  async updateMatchId(oldId, newId) {
+    const { error } = await _supabase
+      .from('champion_matches')
+      .update({ match_id: newId, updated_at: new Date().toISOString() })
+      .eq('match_id', oldId);
+    if (error) console.error('champion updateMatchId:', error);
+    return error || null;
   }
 };
