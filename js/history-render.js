@@ -351,7 +351,7 @@ var editSvcHistory = {
 
 /* ── 日期篩選 ── */
 
-var _histFilterActive = false;
+var _histFilterActive = true;
 
 function _histGetMatchDate(m) {
   var t = m.commence_time || '';
