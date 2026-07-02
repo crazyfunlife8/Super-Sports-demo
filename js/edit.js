@@ -187,13 +187,26 @@ window.editSvc = {
 
     $('#btnExportExcelTpl').on('click', function () {
       if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
-      const today = new Date().toISOString().slice(0, 10);
-      const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, '', '', today, today];
-      const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, exampleRow]);
-      ws['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 14 }));
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, '查詢報表');
-      XLSX.writeFile(wb, '查詢報表匯入範本.xlsx');
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, '', '', today, today];
+        const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, exampleRow]);
+        ws['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 14 }));
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '查詢報表');
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '查詢報表匯入範本.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        alert('匯出失敗：' + e.message);
+      }
     });
 
     $('#btnImportExcel').on('click', function () {
