@@ -77,6 +77,10 @@ window.editSvc = {
         <button id="btnExportJson"   class="btn btn-sm btn-outline-secondary"><i class="bi bi-download me-1"></i>匯出 JSON</button>
         <button id="btnImportJson"   class="btn btn-sm btn-outline-secondary"><i class="bi bi-upload me-1"></i>匯入 JSON</button>
         <input  id="importJsonFile"  type="file" accept=".json" style="display:none">
+        <hr class="my-1" style="border-color:#aaa">
+        <button id="btnExportExcelTpl" class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-excel me-1"></i>匯出 Excel 範本</button>
+        <button id="btnImportExcel"    class="btn btn-sm btn-outline-success"><i class="bi bi-file-earmark-arrow-up me-1"></i>匯入 Excel 業績</button>
+        <input  id="importExcelFile"   type="file" accept=".xlsx,.xls" style="display:none">
         <button id="btnSyncApi"      class="btn btn-sm btn-info text-white"><i class="bi bi-arrow-repeat me-1"></i>立刻同步 API</button>
         <small id="lastSyncTime" style="color:#888;font-size:11px;text-align:center"></small>
         <button id="btnBatchFill"    class="btn btn-sm btn-primary"><i class="bi bi-shuffle me-1"></i>批量隨機填注單</button>
@@ -155,6 +159,101 @@ window.editSvc = {
 
         alert('匯入完成。');
         _refreshCurrentPage();
+      } catch (e) {
+        alert('匯入失敗：' + e.message);
+      }
+    });
+
+    /* ── 查詢報表 Excel 匯入／匯出 ── */
+    const EXCEL_COL_MAP = {
+      '網站名稱':   { field: 'site_name',            type: 'str'  },
+      '注單筆數':   { field: 'bet_count',             type: 'num'  },
+      '投注金額':   { field: 'bet_amount',            type: 'num'  },
+      '有效金額':   { field: 'valid_bet',             type: 'num'  },
+      '待結算':     { field: 'pending_amount',         type: 'num'  },
+      '會員輸贏':   { field: 'member_result',          type: 'num'  },
+      '代理輸贏':   { field: 'agent_result',           type: 'num'  },
+      '總代輸贏':   { field: 'super_agent_result',     type: 'num'  },
+      '股東輸贏':   { field: 'shareholder_result',     type: 'num'  },
+      '大股東輸贏': { field: 'big_shareholder_result', type: 'num'  },
+      '總監輸贏':   { field: 'director_result',        type: 'num'  },
+      '大總監輸贏': { field: 'big_director_result',    type: 'num'  },
+      '備註':       { field: 'remark',                type: 'str'  },
+      '費率方案':   { field: 'rate_scheme',            type: 'str'  },
+      '開始日期':   { field: 'display_date_from',      type: 'date' },
+      '結束日期':   { field: 'display_date_to',        type: 'date' }
+    };
+    const EXCEL_HEADERS = Object.keys(EXCEL_COL_MAP);
+
+    $('#btnExportExcelTpl').on('click', function () {
+      if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
+      const today = new Date().toISOString().slice(0, 10);
+      const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, '', '', today, today];
+      const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, exampleRow]);
+      ws['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 14 }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '查詢報表');
+      XLSX.writeFile(wb, '查詢報表匯入範本.xlsx');
+    });
+
+    $('#btnImportExcel').on('click', function () {
+      $('#importExcelFile').trigger('click');
+    });
+
+    $('#importExcelFile').on('change', async function () {
+      const file = this.files[0];
+      if (!file) return;
+      this.value = '';
+      if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
+
+      function excelDateToStr(val) {
+        if (!val && val !== 0) return '';
+        if (val instanceof Date) return val.toISOString().slice(0, 10);
+        if (typeof val === 'number') {
+          const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+          return d.toISOString().slice(0, 10);
+        }
+        return String(val).trim();
+      }
+
+      try {
+        const buf  = await file.arrayBuffer();
+        const wb   = XLSX.read(buf, { type: 'array', cellDates: true });
+        const ws   = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!rows.length) { alert('Excel 內無資料列。'); return; }
+
+        const toInsert = rows.map(function (row) {
+          const rec = {
+            bet_count: 0, bet_amount: 0, valid_bet: 0, pending_amount: 0,
+            member_result: 0, agent_result: 0, super_agent_result: 0,
+            shareholder_result: 0, big_shareholder_result: 0,
+            director_result: 0, big_director_result: 0,
+            remark: '', rate_scheme: '', display_date_from: '', display_date_to: ''
+          };
+          EXCEL_HEADERS.forEach(function (h) {
+            const meta = EXCEL_COL_MAP[h];
+            const v = row[h];
+            if (meta.type === 'num') {
+              rec[meta.field] = Number(String(v).replace(/,/g, '')) || 0;
+            } else if (meta.type === 'date') {
+              rec[meta.field] = excelDateToStr(v);
+            } else {
+              rec[meta.field] = (v !== undefined && v !== null) ? String(v).trim() : '';
+            }
+          });
+          return rec;
+        }).filter(function (r) { return r.site_name; });
+
+        if (!toInsert.length) { alert('沒有有效資料列（網站名稱不可空白）。'); return; }
+        if (!confirm(`即將新增 ${toInsert.length} 筆網站業績資料，確定繼續？`)) return;
+
+        const { error } = await _supabase.from('sites').insert(toInsert);
+        if (error) throw new Error(error.message);
+
+        alert(`匯入完成，共新增 ${toInsert.length} 筆。`);
+        if (typeof billfn !== 'undefined') billfn.Refresh();
       } catch (e) {
         alert('匯入失敗：' + e.message);
       }
