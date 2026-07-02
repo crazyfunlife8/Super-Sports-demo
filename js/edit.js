@@ -179,7 +179,6 @@ window.editSvc = {
       '總監輸贏':   { field: 'director_result',        type: 'num'  },
       '大總監輸贏': { field: 'big_director_result',    type: 'num'  },
       '備註':       { field: 'remark',                type: 'str'  },
-      '費率方案':   { field: 'rate_scheme',            type: 'str'  },
       '開始日期':   { field: 'display_date_from',      type: 'date' },
       '結束日期':   { field: 'display_date_to',        type: 'date' }
     };
@@ -189,7 +188,7 @@ window.editSvc = {
       if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
       try {
         const today = new Date().toISOString().slice(0, 10);
-        const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, '', '', today, today];
+        const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, '', today, today];
         const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, exampleRow]);
         ws['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 14 }));
         const wb = XLSX.utils.book_new();
