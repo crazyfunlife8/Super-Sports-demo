@@ -142,14 +142,11 @@ function _histTicketsToNested(rows) {
 window.dataSvcHistory = {
 
   async loadMatches() {
-    const now = new Date().toISOString();
     const { data, error } = await _supabase
       .from('matches')
       .select('*')
       .in('sport', ['baseball_mlb', 'baseball_cpbl', 'baseball_npb'])
-      .lt('commence_time', now)
-      .not('full_home_score', 'is', null)
-      .not('full_away_score', 'is', null)
+      .eq('status', 'completed')
       .order('commence_time', { ascending: true });
     if (error) { console.error('loadMatches:', error); return HIST_MATCHES; }
     return (data && data.length > 0) ? data : HIST_MATCHES;
