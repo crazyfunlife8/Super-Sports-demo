@@ -112,20 +112,13 @@ function _liveTicketsToNested(rows) {
 window.dataSvcLive = {
 
   async loadMatches() {
-    /* 台棒/日棒賽事存入 DB 時日期可能是昨日，因此視窗從昨日 TW 午夜開始 */
-    const twNow = new Date(Date.now() + 8 * 60 * 60 * 1000);
-    const twYesterdayMidnightUTC = new Date(
-      Date.UTC(twNow.getUTCFullYear(), twNow.getUTCMonth(), twNow.getUTCDate() - 1) - 8 * 60 * 60 * 1000
-    ).toISOString();
-    const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-
+    /* 只要非已完賽（upcoming / started）都顯示；
+       完賽後 sync 會把 status 改成 completed，屆時自然移到歷史頁 */
     const { data, error } = await _supabase
       .from('matches')
       .select('*')
       .in('sport', ['baseball_mlb', 'baseball_cpbl', 'baseball_npb'])
       .neq('status', 'completed')
-      .gte('commence_time', twYesterdayMidnightUTC)
-      .lte('commence_time', in24h)
       .order('commence_time', { ascending: true });
     if (error) { console.error('loadMatches:', error); return []; }
     return data || [];
