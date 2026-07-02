@@ -181,7 +181,8 @@ function parseEvtBlock(evt: unknown[], startIdx: number, isMoneyline = false) {
 }
 
 function parseLiveGame(evt: unknown[], sport: string): MatchRecord | null {
-  if (!Array.isArray(evt) || evt[0] !== 0) return null // 只取全場早餐(subType=0)
+  if (!Array.isArray(evt)) return null
+  // MLB 只取 subType=0（全場早盤）；台棒/日棒可能用不同 subType，改為只驗 evtId 有效即接受
   const evtId = String(evt[4] || '')
   if (!evtId || evtId === '0') return null
 
