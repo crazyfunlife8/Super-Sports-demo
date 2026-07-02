@@ -38,31 +38,35 @@ function fmtHandicap(line, bookOdds) {
   return String(n) + (vig >= 0 ? '+' : '') + String(vig);
 }
 
-/* 導航 ball_* ID → 內部球種 key（僅三個棒球有資料） */
+/* 導航 ball_* ID → 內部球種 key */
 var BALL_ID_TO_SPORT = {
   ball_4:  'baseball_mlb',
   ball_11: 'baseball_cpbl',
-  ball_12: 'baseball_npb'
+  ball_12: 'baseball_npb',
+  ball_31: 'champion'
 };
 
 /* 球種 key → 顯示名稱 */
 var SPORT_DISPLAY = {
   baseball_mlb:  '美棒',
   baseball_cpbl: '台棒',
-  baseball_npb:  '日棒'
+  baseball_npb:  '日棒',
+  champion:      '冠軍聯賽'
 };
 
 var SPORT_DISPLAY_FULL = {
   baseball_mlb:  'MLB 美國職棒',
   baseball_cpbl: 'CPBL 中華職棒',
-  baseball_npb:  'NPB 日本職棒'
+  baseball_npb:  'NPB 日本職棒',
+  champion:      '世界盃足球'
 };
 
 /* 球種 key → URL sport 參數 */
 var SPORT_TO_PARAM = {
   baseball_mlb:  'mlb',
   baseball_cpbl: 'cpbl',
-  baseball_npb:  'npb'
+  baseball_npb:  'npb',
+  champion:      'champion'
 };
 
 /* 目前顯示的球種（預設美棒） */
@@ -297,6 +301,10 @@ var editSvcLive = {
 /* ── billfnLive 公開介面 ── */
 
 billfnLive.Refresh = function () {
+  if (_currentSport === 'champion') {
+    billfnChampion.Refresh();
+    return;
+  }
   Promise.all([dataSvcLive.loadMatches(), dataSvcLive.loadTickets()])
     .then(function (results) {
       var matches = results[0];
@@ -312,7 +320,7 @@ billfnLive.Refresh = function () {
 /* ── 初始化 ── */
 $(function () {
   /* 讀取 URL ?sport= 參數，設定初始球種 */
-  var PARAM_TO_SPORT = { mlb: 'baseball_mlb', cpbl: 'baseball_cpbl', npb: 'baseball_npb', other: '__other__' };
+  var PARAM_TO_SPORT = { mlb: 'baseball_mlb', cpbl: 'baseball_cpbl', npb: 'baseball_npb', champion: 'champion', other: '__other__' };
   var sportParam = new URLSearchParams(window.location.search).get('sport');
   if (sportParam && PARAM_TO_SPORT[sportParam]) {
     _currentSport = PARAM_TO_SPORT[sportParam];
