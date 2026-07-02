@@ -178,8 +178,8 @@ function buildHistRows(match, tickets, isEdit) {
         <div>${match.home_team}<span class="text-danger">[主]</span></div>
       </div></td>
       ${histScoreCell(awayScore, homeScore)}
-      ${histValCell('&nbsp;' + fmtHandicap(rowSp.home_line, rowSp.home_book_odds), '&nbsp;' + fmtHandicap(rowSp.away_line, rowSp.away_book_odds))}
-      ${histOddsCell(avgOdds(rowSp.home_odds, rowSp.away_odds), avgOdds(rowSp.home_odds, rowSp.away_odds))}
+      ${histValCell('&nbsp;' + (rowSp.away_line || ''), '&nbsp;' + (rowSp.home_line || ''))}
+      ${histOddsCell(fmtOdds(rowSp.away_odds), fmtOdds(rowSp.home_odds))}
       ${histCountCell(hdpHomeCnt, hdpAwayCnt)}
       ${histAmtCell(hdpHomeAmt, hdpAwayAmt)}
       ${histValCell('&nbsp;' + ttLine, '&nbsp;')}
