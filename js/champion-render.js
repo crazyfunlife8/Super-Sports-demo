@@ -22,7 +22,7 @@ function champCell(value, matchId, col, key, isEdit) {
   var display = (value !== undefined && value !== null && value !== 0) ? value : '';
   if (!isEdit) return display;
   var attrs = `data-match-id="${matchId}" data-col="${col}"` + (key ? ` data-key="${key}"` : '');
-  return `<span class="edit-champ-cell" style="cursor:pointer;min-width:20px;display:inline-block;border-bottom:1px dashed #aaa" ${attrs}>${display}</span>`;
+  return `<span class="edit-champ-cell" style="cursor:pointer;min-width:20px;display:inline-block;border-bottom:1px dashed #aaa" ${attrs}>${display !== '' ? display : '0'}</span>`;
 }
 
 /* ── 建立一場賽事的列 ── */
