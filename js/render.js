@@ -147,6 +147,34 @@ function bindSiteDateHandlers() {
     });
 }
 
+/* ── 依網站名稱分組加總（View 模式用） ── */
+
+function _groupBySiteName(sites) {
+  var groups = {};
+  var order  = [];
+  sites.forEach(function (s) {
+    var name = s.site_name || '';
+    if (!groups[name]) {
+      groups[name] = {
+        id: 'grp_' + name,
+        site_name: name,
+        bet_count: 0, bet_amount: 0, valid_bet: 0, pending_amount: 0,
+        member_result: 0, agent_result: 0, super_agent_result: 0,
+        shareholder_result: 0, big_shareholder_result: 0,
+        director_result: 0, big_director_result: 0,
+        remark: s.remark || '',
+        rate_scheme: s.rate_scheme || '',
+        display_date_from: '', display_date_to: ''
+      };
+      order.push(name);
+    }
+    SUM_FIELDS.forEach(function (f) {
+      groups[name][f] = (Number(groups[name][f]) || 0) + (Number(s[f]) || 0);
+    });
+  });
+  return order.map(function (name) { return groups[name]; });
+}
+
 /* ── billfn 公開介面 ── */
 
 var _filterActive = false;
@@ -154,29 +182,34 @@ var _filterActive = false;
 billfn.Refresh = function () {
   dataSvc.loadSites().then(function (sites) {
     var isEdit = (typeof editSvc !== 'undefined') && editSvc.isEditMode();
-    var filtered = sites;
+    var toRender;
 
-    /* 只有使用者主動按下查詢後才套用日期篩選；編輯模式永遠顯示全部 */
-    if (!isEdit && _filterActive) {
-      var from = $('#txtStartDate').val();
-      var to   = $('#txtEndDate').val();
-      if (from || to) {
-        filtered = sites.filter(function (s) {
-          var sf = s.display_date_from || '';
-          var st = s.display_date_to   || '';
-          if (!sf && !st) return true;
-          if (from && st && st < from) return false;
-          if (to   && sf && sf > to)   return false;
-          return true;
-        });
-      }
-    }
-
-    renderTable(filtered);
-    bindSiteDateHandlers();
     if (isEdit) {
-      editSvc.bindHandlers();
+      /* 編輯模式：顯示全部個別記錄，讓業主可設定每筆的時間區間 */
+      toRender = sites;
+    } else {
+      /* View 模式：先按日期篩選，再依網站名稱分組加總 */
+      var filtered = sites;
+      if (_filterActive) {
+        var from = $('#txtStartDate').val();
+        var to   = $('#txtEndDate').val();
+        if (from || to) {
+          filtered = sites.filter(function (s) {
+            var sf = s.display_date_from || '';
+            var st = s.display_date_to   || '';
+            if (!sf && !st) return true;
+            if (from && st && st < from) return false;
+            if (to   && sf && sf > to)   return false;
+            return true;
+          });
+        }
+      }
+      toRender = _groupBySiteName(filtered);
     }
+
+    renderTable(toRender);
+    bindSiteDateHandlers();
+    if (isEdit) editSvc.bindHandlers();
   });
 };
 
