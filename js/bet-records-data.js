@@ -6,8 +6,8 @@ window.betRecordsDataSvc = {
     let query = _supabase.from('bet_tickets').select('*').order('created_at', { ascending: false });
 
     if (filters) {
-      if (filters.dateFrom) query = query.gte('created_at', filters.dateFrom + 'T00:00:00');
-      if (filters.dateTo)   query = query.lte('created_at', filters.dateTo   + 'T23:59:59');
+      if (filters.dateFrom) query = query.gte('created_at', filters.dateFrom + 'T00:00:00+08:00');
+      if (filters.dateTo)   query = query.lte('created_at', filters.dateTo   + 'T23:59:59+08:00');
       if (filters.account)  query = query.ilike('account_name', '%' + filters.account + '%');
       if (filters.ticketNo) query = query.ilike('ticket_no', filters.ticketNo + '%');
     }

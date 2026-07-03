@@ -75,7 +75,7 @@ $(function () {
     if (val === 'Game') {
       $('#bllAll').hide();
       $('#betRecordsContainer').show();
-      if (typeof betRecordsFn !== 'undefined') betRecordsFn.Refresh();
+      if (typeof betRecordsFn !== 'undefined') betRecordsFn.activateFilter();
     } else {
       $('#betRecordsContainer').hide();
       $('#bllAll').show();
