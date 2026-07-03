@@ -386,12 +386,13 @@ $(function () {
     _histCurrentSport = PARAM_TO_SPORT[sportParam];
   }
 
-  /* 帳務日期：flatpickr 初始化，預設今日 */
-  var today = new Date();
-  var todayStr = today.getFullYear() + '-'
-    + String(today.getMonth() + 1).padStart(2, '0') + '-'
-    + String(today.getDate()).padStart(2, '0');
-  flatpickr('#histDate', { dateFormat: 'Y-m-d', defaultDate: todayStr, allowInput: true });
+  /* 帳務日期：flatpickr 初始化，預設昨日（台棒/日棒完賽後存在昨日日期下） */
+  var yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  var yesterdayStr = yesterday.getFullYear() + '-'
+    + String(yesterday.getMonth() + 1).padStart(2, '0') + '-'
+    + String(yesterday.getDate()).padStart(2, '0');
+  flatpickr('#histDate', { dateFormat: 'Y-m-d', defaultDate: yesterdayStr, allowInput: true });
 
   /* 設定 ballName */
   $('#ballName').text(_histCurrentSport === '__other__' ? '其他賽事' : (HIST_SPORT_DISPLAY[_histCurrentSport] || '美棒'));
