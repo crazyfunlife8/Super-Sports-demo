@@ -41,7 +41,6 @@ function buildLevelCells(row, isEditMode) {
       ? ` data-edit-field="${lv.field}" data-site-id="${row.id}"`
       : '';
 
-    /* tbody td：只放數值，onclick/箭頭/文字標籤是 thead th 的結構 */
     const rebateCell = lv.simple
       ? `<td class="w1" style="display:none">0</td>`
       : `<td class="w${lv.wIdx}" data-v="${lv.wIdx}" style="display:none">` +
@@ -56,48 +55,66 @@ function buildLevelCells(row, isEditMode) {
   }).join('');
 }
 
-/* ── 資料列 ── */
+/* ── 分組列（View & Edit 模式皆用，Edit 模式可展開） ── */
 
-function buildDataRow(site, isEditMode) {
+function buildGroupRow(group, isEditMode, idx) {
+  const isExpanded = _expandedGroups.has(group.site_name);
+  const expandBtn = isEditMode
+    ? `<button class="btn btn-link btn-sm p-0 me-1 text-dark"
+         onclick="billfn._toggleGroup(${idx});return false;"
+         title="${isExpanded ? '收合' : '展開個別記錄'}"
+         style="font-size:11px;line-height:1;text-decoration:none">${isExpanded ? '▼' : '▶'}</button>`
+    : '';
+
+  const rate = group.rate_scheme || '';
+  const w99Cells = Array(21).fill(null)
+    .map(() => `<td class="w99" style="display:none">${rate}</td>`)
+    .join('');
+
+  return `<tr class="group-row"${isEditMode ? ' style="font-weight:600"' : ''}>
+    <td>${expandBtn}${group.site_name}</td>
+    <td>${fmtNum(group.bet_count)}</td>
+    <td><a href="javascript:void(0)"><span style="color:blue">${fmtNum(group.bet_amount)}</span></a></td>
+    <td>${fmtNum(group.valid_bet)}</td>
+    <td>${fmtNum(group.pending_amount)}</td>
+    ${buildLevelCells(group, false)}
+    <td>${group.remark || ''}</td>
+    ${w99Cells}
+  </tr>`;
+}
+
+/* ── 個別記錄列（Edit 模式展開後顯示） ── */
+
+function buildIndividualRow(site) {
   const rate = site.rate_scheme || '';
   const w99Cells = Array(21).fill(null)
     .map(() => `<td class="w99" style="display:none">${rate}</td>`)
     .join('');
 
-  const deleteBtn = isEditMode
-    ? `<button class="btn btn-danger btn-sm ms-2 p-0 px-1 delete-site-btn" ` +
-      `data-site-id="${site.id}" title="刪除此列">` +
-      `<i class="bi bi-trash"></i></button>`
-    : '';
+  const deleteBtn = `<button class="btn btn-danger btn-sm ms-2 p-0 px-1 delete-site-btn"
+    data-site-id="${site.id}" title="刪除此列"><i class="bi bi-trash"></i></button>`;
 
-  const ea = (f) => isEditMode
-    ? ` data-edit-field="${f}" data-site-id="${site.id}"`
-    : '';
+  const ea = (f) => ` data-edit-field="${f}" data-site-id="${site.id}"`;
 
-  return `<tr data-site-id="${site.id}">
-    <td${ea('site_name')}>${site.site_name}${deleteBtn}</td>
+  return `<tr class="individual-row" data-site-id="${site.id}"
+      style="background:#f5f5f5;font-size:0.92em">
+    <td style="padding-left:2rem"${ea('site_name')}>${site.site_name}${deleteBtn}</td>
     <td${ea('bet_count')}>${fmtNum(site.bet_count)}</td>
     <td${ea('bet_amount')}><a href="javascript:void(0)"><span style="color:blue">${fmtNum(site.bet_amount)}</span></a></td>
     <td${ea('valid_bet')}>${fmtNum(site.valid_bet)}</td>
     <td${ea('pending_amount')}>${fmtNum(site.pending_amount)}</td>
-    ${buildLevelCells(site, isEditMode)}
+    ${buildLevelCells(site, true)}
     <td${ea('remark')}>${site.remark || ''}</td>
-    <td class="date-edit-col"><input type="date" class="site-date-input form-control form-control-sm p-1"
-      data-site-id="${site.id}" data-field="display_date_from"
-      value="${site.display_date_from || ''}"></td>
-    <td class="date-edit-col"><input type="date" class="site-date-input form-control form-control-sm p-1"
-      data-site-id="${site.id}" data-field="display_date_to"
-      value="${site.display_date_to || ''}"></td>
     ${w99Cells}
   </tr>`;
 }
 
 /* ── 合計列 ── */
 
-function buildTotalRow(sites) {
+function buildTotalRow(groups) {
   const totals = { id: 'total' };
   SUM_FIELDS.forEach(f => {
-    totals[f] = sites.reduce((s, r) => s + (Number(r[f]) || 0), 0);
+    totals[f] = groups.reduce((s, r) => s + (Number(r[f]) || 0), 0);
   });
 
   const w99Cells = Array(21).fill('<td class="w99" style="display:none"></td>').join('');
@@ -110,20 +127,24 @@ function buildTotalRow(sites) {
     <td>${fmtNum(totals.pending_amount)}</td>
     ${buildLevelCells(totals, false)}
     <td></td>
-    <td class="date-edit-col"></td>
-    <td class="date-edit-col"></td>
     ${w99Cells}
   </tr>`;
 }
 
 /* ── 主渲染 ── */
 
-function renderTable(sites) {
-  const isEditMode = (typeof editSvc !== 'undefined') && editSvc.isEditMode();
-
-  let html = sites.map(s => buildDataRow(s, isEditMode)).join('');
-  html += buildTotalRow(sites);
-
+function renderTable(groups, filteredSites, isEditMode) {
+  billfn._groups = groups;   // 供 _toggleGroup 依 index 查 site_name
+  let html = '';
+  groups.forEach(function (group, idx) {
+    html += buildGroupRow(group, isEditMode, idx);
+    if (isEditMode && _expandedGroups.has(group.site_name)) {
+      filteredSites
+        .filter(s => (s.site_name || '') === group.site_name)
+        .forEach(function (site) { html += buildIndividualRow(site); });
+    }
+  });
+  html += buildTotalRow(groups);
   if (isEditMode) {
     html += `<tr><td colspan="45">
       <button class="btn btn-outline-primary btn-sm add-site-btn">
@@ -131,23 +152,10 @@ function renderTable(sites) {
       </button>
     </td></tr>`;
   }
-
   $('#sitesBody').html(html);
 }
 
-/* ── 日期欄 change handler（總是綁定，欄位本身由 CSS 控制顯示） ── */
-
-function bindSiteDateHandlers() {
-  $('#sitesBody').off('change.date', '.site-date-input')
-    .on('change.date', '.site-date-input', function () {
-      var siteId = $(this).data('site-id');
-      var field  = $(this).data('field');
-      var value  = $(this).val();
-      dataSvc.saveSite(siteId, field, value);
-    });
-}
-
-/* ── 依網站名稱分組加總（View 模式用） ── */
+/* ── 依網站名稱分組加總 ── */
 
 function _groupBySiteName(sites) {
   var groups = {};
@@ -163,8 +171,7 @@ function _groupBySiteName(sites) {
         shareholder_result: 0, big_shareholder_result: 0,
         director_result: 0, big_director_result: 0,
         remark: s.remark || '',
-        rate_scheme: s.rate_scheme || '',
-        display_date_from: '', display_date_to: ''
+        rate_scheme: s.rate_scheme || ''
       };
       order.push(name);
     }
@@ -175,41 +182,57 @@ function _groupBySiteName(sites) {
   return order.map(function (name) { return groups[name]; });
 }
 
-/* ── billfn 公開介面 ── */
+/* ── 狀態 ── */
 
-var _filterActive = false;
+var _filterActive  = true;
+var _expandedGroups = new Set();
+var _cachedSites   = [];
+
+/* ── 展開 / 收合（onclick 直接呼叫） ── */
+
+billfn._toggleGroup = function (idx) {
+  var groupName = (billfn._groups[idx] || {}).site_name;
+  if (groupName === undefined) return;
+  if (_expandedGroups.has(groupName)) {
+    _expandedGroups.delete(groupName);
+  } else {
+    _expandedGroups.add(groupName);
+  }
+  billfn._renderFromCache();
+};
+
+/* ── 從快取重渲（expand/collapse 與日期切換共用，不打 DB） ── */
+
+billfn._renderFromCache = function () {
+  var isEdit = (typeof editSvc !== 'undefined') && editSvc.isEditMode();
+
+  var filtered = _cachedSites;
+  if (_filterActive) {
+    var from = $('#txtStartDate').val();
+    var to   = $('#txtEndDate').val();
+    if (from || to) {
+      filtered = _cachedSites.filter(function (s) {
+        var sf = s.display_date_from || '';
+        var st = s.display_date_to   || '';
+        if (!sf && !st) return true;
+        if (from && st && st < from) return false;
+        if (to   && sf && sf > to)   return false;
+        return true;
+      });
+    }
+  }
+
+  var groups = _groupBySiteName(filtered);
+  renderTable(groups, filtered, isEdit);
+  if (isEdit) editSvc.bindHandlers();
+};
+
+/* ── 重新從 DB 載入再渲染 ── */
 
 billfn.Refresh = function () {
   dataSvc.loadSites().then(function (sites) {
-    var isEdit = (typeof editSvc !== 'undefined') && editSvc.isEditMode();
-    var toRender;
-
-    if (isEdit) {
-      /* 編輯模式：顯示全部個別記錄，讓業主可設定每筆的時間區間 */
-      toRender = sites;
-    } else {
-      /* View 模式：先按日期篩選，再依網站名稱分組加總 */
-      var filtered = sites;
-      if (_filterActive) {
-        var from = $('#txtStartDate').val();
-        var to   = $('#txtEndDate').val();
-        if (from || to) {
-          filtered = sites.filter(function (s) {
-            var sf = s.display_date_from || '';
-            var st = s.display_date_to   || '';
-            if (!sf && !st) return true;
-            if (from && st && st < from) return false;
-            if (to   && sf && sf > to)   return false;
-            return true;
-          });
-        }
-      }
-      toRender = _groupBySiteName(filtered);
-    }
-
-    renderTable(toRender);
-    bindSiteDateHandlers();
-    if (isEdit) editSvc.bindHandlers();
+    _cachedSites = sites;
+    billfn._renderFromCache();
   });
 };
 
@@ -218,7 +241,6 @@ billfn.showcol = function (el) {
   let idx, $groupTh, show;
 
   if (el.tagName === 'INPUT' && el.type === 'checkbox') {
-    /* Row-2 checkbox：顯示/隱藏整欄 + 調整 group header colspan */
     idx = $el.data('idx');
     $groupTh = $el.closest('th');
     show = el.checked;
@@ -230,7 +252,6 @@ billfn.showcol = function (el) {
       $groupTh.attr('colspan', 1);
     }
   } else {
-    /* Row-3 .w{idx} th 點擊：切換 上級返水 ↔ 未拆帳，並反向箭頭 */
     idx = $el.data('v');
     const $arrow = $el.find(`span[data-idx="${idx}"]`);
     const state = parseInt($arrow.attr('data-show')) || 0;
@@ -249,9 +270,14 @@ billfn.showcol = function (el) {
 
 /* ── 初始化 ── */
 $(function () {
+  /* 確保日期選單有初始值（flatpickr 可能尚未執行） */
+  var today = new Date().toISOString().slice(0, 10);
+  if (!$('#txtStartDate').val()) $('#txtStartDate').val(today);
+  if (!$('#txtEndDate').val())   $('#txtEndDate').val(today);
+
   billfn.Refresh();
 
-  /* V-10：Supabase Realtime — sites 表有任何變動立即重新整理 */
+  /* Supabase Realtime — sites 表有任何變動立即重新整理 */
   _supabase
     .channel('sites-realtime')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'sites' }, function () {

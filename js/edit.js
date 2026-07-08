@@ -178,9 +178,7 @@ window.editSvc = {
       '大股東輸贏': { field: 'big_shareholder_result', type: 'num'  },
       '總監輸贏':   { field: 'director_result',        type: 'num'  },
       '大總監輸贏': { field: 'big_director_result',    type: 'num'  },
-      '備註':       { field: 'remark',                type: 'str'  },
-      '開始日期':   { field: 'display_date_from',      type: 'date' },
-      '結束日期':   { field: 'display_date_to',        type: 'date' }
+      '備註':       { field: 'remark',                type: 'str'  }
     };
     const EXCEL_HEADERS = Object.keys(EXCEL_COL_MAP);
 
@@ -188,7 +186,7 @@ window.editSvc = {
       if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
       try {
         const today = new Date().toISOString().slice(0, 10);
-        const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, '', today, today];
+        const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, ''];
         const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, exampleRow]);
         ws['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 14 }));
         const wb = XLSX.utils.book_new();
@@ -218,23 +216,17 @@ window.editSvc = {
       this.value = '';
       if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
 
-      function excelDateToStr(val) {
-        if (!val && val !== 0) return '';
-        if (val instanceof Date) return val.toISOString().slice(0, 10);
-        if (typeof val === 'number') {
-          const d = new Date(Math.round((val - 25569) * 86400 * 1000));
-          return d.toISOString().slice(0, 10);
-        }
-        return String(val).trim();
-      }
-
       try {
         const buf  = await file.arrayBuffer();
-        const wb   = XLSX.read(buf, { type: 'array', cellDates: true });
+        const wb   = XLSX.read(buf, { type: 'array' });
         const ws   = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
         if (!rows.length) { alert('Excel 內無資料列。'); return; }
+
+        const today      = new Date().toISOString().slice(0, 10);
+        const importFrom = $('#txtStartDate').val() || today;
+        const importTo   = $('#txtEndDate').val()   || today;
 
         const toInsert = rows.map(function (row) {
           const rec = {
@@ -242,15 +234,14 @@ window.editSvc = {
             member_result: 0, agent_result: 0, super_agent_result: 0,
             shareholder_result: 0, big_shareholder_result: 0,
             director_result: 0, big_director_result: 0,
-            remark: '', rate_scheme: '', display_date_from: '', display_date_to: ''
+            remark: '', rate_scheme: '',
+            display_date_from: importFrom, display_date_to: importTo
           };
           EXCEL_HEADERS.forEach(function (h) {
             const meta = EXCEL_COL_MAP[h];
             const v = row[h];
             if (meta.type === 'num') {
               rec[meta.field] = Number(String(v).replace(/,/g, '')) || 0;
-            } else if (meta.type === 'date') {
-              rec[meta.field] = excelDateToStr(v);
             } else {
               rec[meta.field] = (v !== undefined && v !== null) ? String(v).trim() : '';
             }

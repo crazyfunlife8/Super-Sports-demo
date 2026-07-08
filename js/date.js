@@ -66,7 +66,7 @@ $(function () {
       if (typeof betRecordsFn !== 'undefined') betRecordsFn.activateFilter();
     } else {
       _filterActive = true;
-      billfn.Refresh();
+      billfn._renderFromCache();
     }
   });
 

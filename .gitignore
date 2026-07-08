@@ -8,17 +8,11 @@ Thumbs.db
 .claude/
 
 # Internal / AI context files
-view-llm.md
-view-llm-full.md
-AI-vibeCoding.md
 開發規格書.md
 新增功能規格書.md
 台灣運彩資料格式.md
 驗收項目清單.md
-SportsGameOdds-API.md
-Odds-API_getEvents完整回應.md
-Odds-API-VibeCoding.md
-Odds-API資料格式.md
+網站頁面及功能說明.md
 
 # Supabase local dev
 supabase/.temp/

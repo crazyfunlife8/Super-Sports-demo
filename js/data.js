@@ -29,6 +29,8 @@ window.dataSvc = {
 
   async addSite() {
     const today = new Date().toISOString().slice(0, 10);
+    const from = $('#txtStartDate').val() || today;
+    const to   = $('#txtEndDate').val()   || today;
     const { data, error } = await _supabase
       .from('sites')
       .insert({
@@ -38,7 +40,7 @@ window.dataSvc = {
         shareholder_result: 0, big_shareholder_result: 0,
         director_result: 0, big_director_result: 0,
         remark: '', rate_scheme: '',
-        display_date_from: today, display_date_to: today
+        display_date_from: from, display_date_to: to
       })
       .select()
       .single();
