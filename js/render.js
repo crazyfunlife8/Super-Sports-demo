@@ -171,7 +171,8 @@ function _groupBySiteName(sites) {
         shareholder_result: 0, big_shareholder_result: 0,
         director_result: 0, big_director_result: 0,
         remark: s.remark || '',
-        rate_scheme: s.rate_scheme || ''
+        rate_scheme: s.rate_scheme || '',
+        display_date: ''
       };
       order.push(name);
     }
@@ -212,11 +213,10 @@ billfn._renderFromCache = function () {
     var to   = $('#txtEndDate').val();
     if (from || to) {
       filtered = _cachedSites.filter(function (s) {
-        var sf = s.display_date_from || '';
-        var st = s.display_date_to   || '';
-        if (!sf && !st) return true;
-        if (from && st && st < from) return false;
-        if (to   && sf && sf > to)   return false;
+        var sd = s.display_date || '';
+        if (!sd) return true;
+        if (from && sd < from) return false;
+        if (to   && sd > to)   return false;
         return true;
       });
     }

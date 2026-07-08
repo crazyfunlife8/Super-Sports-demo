@@ -167,6 +167,7 @@ window.editSvc = {
     /* ── 查詢報表 Excel 匯入／匯出 ── */
     const EXCEL_COL_MAP = {
       '網站名稱':   { field: 'site_name',            type: 'str'  },
+      '日期':       { field: 'display_date',          type: 'date' },
       '注單筆數':   { field: 'bet_count',             type: 'num'  },
       '投注金額':   { field: 'bet_amount',            type: 'num'  },
       '有效金額':   { field: 'valid_bet',             type: 'num'  },
@@ -186,7 +187,7 @@ window.editSvc = {
       if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
       try {
         const today = new Date().toISOString().slice(0, 10);
-        const exampleRow = ['示範網站A', 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, ''];
+        const exampleRow = ['示範網站A', today, 100, 500000, 450000, 0, -5000, 2500, 1250, 625, 312, 156, 78, ''];
         const ws = XLSX.utils.aoa_to_sheet([EXCEL_HEADERS, exampleRow]);
         ws['!cols'] = EXCEL_HEADERS.map(() => ({ wch: 14 }));
         const wb = XLSX.utils.book_new();
@@ -216,17 +217,25 @@ window.editSvc = {
       this.value = '';
       if (typeof XLSX === 'undefined') { alert('Excel 函式庫尚未載入，請重新整理後再試。'); return; }
 
+      function excelDateToStr(val) {
+        if (!val && val !== 0) return '';
+        if (val instanceof Date) return val.toISOString().slice(0, 10);
+        if (typeof val === 'number') {
+          const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+          return d.toISOString().slice(0, 10);
+        }
+        return String(val).trim();
+      }
+
       try {
         const buf  = await file.arrayBuffer();
-        const wb   = XLSX.read(buf, { type: 'array' });
+        const wb   = XLSX.read(buf, { type: 'array', cellDates: true });
         const ws   = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
 
         if (!rows.length) { alert('Excel 內無資料列。'); return; }
 
-        const today      = new Date().toISOString().slice(0, 10);
-        const importFrom = $('#txtStartDate').val() || today;
-        const importTo   = $('#txtEndDate').val()   || today;
+        const today = new Date().toISOString().slice(0, 10);
 
         const toInsert = rows.map(function (row) {
           const rec = {
@@ -234,18 +243,20 @@ window.editSvc = {
             member_result: 0, agent_result: 0, super_agent_result: 0,
             shareholder_result: 0, big_shareholder_result: 0,
             director_result: 0, big_director_result: 0,
-            remark: '', rate_scheme: '',
-            display_date_from: importFrom, display_date_to: importTo
+            remark: '', rate_scheme: '', display_date: ''
           };
           EXCEL_HEADERS.forEach(function (h) {
             const meta = EXCEL_COL_MAP[h];
             const v = row[h];
             if (meta.type === 'num') {
               rec[meta.field] = Number(String(v).replace(/,/g, '')) || 0;
+            } else if (meta.type === 'date') {
+              rec[meta.field] = excelDateToStr(v);
             } else {
               rec[meta.field] = (v !== undefined && v !== null) ? String(v).trim() : '';
             }
           });
+          if (!rec.display_date) rec.display_date = today;
           return rec;
         }).filter(function (r) { return r.site_name; });
 
@@ -356,7 +367,7 @@ window.editSvc = {
         shareholder_result: 5625, big_shareholder_result: 2812,
         director_result: 1406, big_director_result: 703,
         remark: '', rate_scheme: '',
-        display_date_from: '2026-05-01', display_date_to: '2026-05-11'
+        display_date: '2026-05-01'
       },
       {
         site_name: '示範網站B',
@@ -365,7 +376,7 @@ window.editSvc = {
         shareholder_result: -4000, big_shareholder_result: -2000,
         director_result: -1000, big_director_result: -500,
         remark: '', rate_scheme: '',
-        display_date_from: '2026-05-01', display_date_to: '2026-05-11'
+        display_date: '2026-05-01'
       }
     ];
 
